@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
 
     'users.apps.UsersConfig',
+    'ads.apps.AdsConfig',
 ]
 
 REST_FRAMEWORK = {
