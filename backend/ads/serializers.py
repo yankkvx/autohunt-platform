@@ -57,16 +57,44 @@ class AdSerializer(serializers.ModelSerializer):
     model = serializers.CharField(source='model.name', read_only=True)
     body_type = serializers.CharField(source='body_type.name', read_only=True)
     fuel_type = serializers.CharField(source='fuel_type.name', read_only=True)
-    drive_type = serializers.CharField(source='drive_type.name', read_only=True)
-    transmission = serializers.CharField(source='transmisson.name', read_only=True)
-    exterior_color = serializers.CharField(source='exterior_color.name', read_only=True)
-    interior_color = serializers.CharField(source='interior_color.name', read_only=True)
-    interior_material = serializers.CharField(source='interior_material.name', read_only=True)
+    drive_type = serializers.CharField(
+        source='drive_type.name', read_only=True)
+    transmission = serializers.CharField(
+        source='transmisson.name', read_only=True)
+    exterior_color = serializers.CharField(
+        source='exterior_color.name', read_only=True)
+    interior_color = serializers.CharField(
+        source='interior_color.name', read_only=True)
+    interior_material = serializers.CharField(
+        source='interior_material.name', read_only=True)
 
     class Meta:
         model = Ad
-        fields = ['id', 'title', 'description', 'year', 'mileage', 'power', 'capacity', 
-                  'battery_power', 'battery_capacity', 'location', 'vin', 'brand', 'model', 
+        fields = ['id', 'title', 'description', 'year', 'mileage', 'power', 'capacity',
+                  'battery_power', 'battery_capacity', 'location', 'vin', 'brand', 'model',
                   'body_type', 'fuel_type', 'drive_type', 'transmission', 'exterior_color',
                   'interior_color', 'interior_material', 'warranty', 'airbag', 'air_conditioning',
                   'number_of_seats', 'number_of_doors', 'created_at', 'updated_at', 'user']
+
+
+class AdWriteSerializer(serializers.ModelSerializer):
+    brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all(), allow_null=True, required=False)
+    model = serializers.PrimaryKeyRelatedField(queryset=ModelCar.objects.all(), allow_null=True, required=False)
+    body_type = serializers.PrimaryKeyRelatedField(queryset=BodyType.objects.all(), allow_null=True, required=False)
+    fuel_type = serializers.PrimaryKeyRelatedField(queryset=FuelType.objects.all(), allow_null=True, required=False)
+    drive_type = serializers.PrimaryKeyRelatedField(queryset=DriveType.objects.all(), allow_null=True, required=False)
+    transmisson = serializers.PrimaryKeyRelatedField(queryset=Transmisson.objects.all(), allow_null=True, required=False)
+    exterior_color = serializers.PrimaryKeyRelatedField(queryset=Color.objects.all(), allow_null=True, required=False)
+    interior_color = serializers.PrimaryKeyRelatedField(queryset=Color.objects.all(), allow_null=True, required=False)
+    interior_material = serializers.PrimaryKeyRelatedField(queryset=InteriorMaterial.objects.all(), allow_null=True, required=False)
+
+    class Meta:
+        model = Ad
+        fields = [
+            'title', 'description', 'year', 'mileage', 'power', 'capacity',
+            'battery_power', 'battery_capacity', 'location', 'vin', 'brand', 'model',
+            'body_type', 'fuel_type', 'drive_type', 'transmisson', 'exterior_color',
+            'interior_color', 'interior_material', 'warranty', 'airbag', 'air_conditioning',
+            'number_of_seats', 'number_of_doors'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
