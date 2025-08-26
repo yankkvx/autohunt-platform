@@ -132,3 +132,69 @@ class UserManagement(APIView):
 
         user.delete()
         return Response({'detail': 'User was deleted.'}, status=status.HTTP_200_OK)
+
+
+class AdminUserManagement(APIView):
+    """
+    Admin API for managing users: retieve, update, delete
+    """
+
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, pk=None):
+        """
+        Retreive user(s) information
+        GET /users/ - list all users
+        GET /user/<pk>/ - retrieve specific user
+        """
+        if pk:
+            user = get_object_or_404(User, id=pk)
+            serializer = UserSerializer(user, many=False)
+        else:
+            users = User.objects.all()
+            serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        """
+        Update user information, including optional password and image
+        """
+        user = get_object_or_404(User, id=pk)
+        data = request.data
+
+        # Update common profile fields
+        user.first_name = data.get('first_name', user.first_name)
+        user.last_name = data.get('last_name', user.last_name)
+        user.phone_number = data.get('phone_number', user.phone_number)
+        user.about = data.get('about', user.about)
+        user.telegram = data.get('telegram', user.telegram)
+        user.twitter = data.get('twitter', user.twitter)
+        user.instagram = data.get('instagram', user.instagram)
+
+        profile_image = request.FILES.get('profile_image')
+        if profile_image:
+            user.profile_image = profile_image
+
+        # Extra field only for company accounts
+        if user.account_type == User.ACCOUNT_COMPANY:
+            user.company_name = data.get('company_name', user.company_name)
+            user.company_website = data.get(
+                'company_website', user.company_website)
+            user.company_office = data.get(
+                'company_office', user.company_office)
+
+        # If new password is provided hast it before saving
+        if data.get('password'):
+            user.password = make_password(data['password'])
+
+        user.save()
+        serializer = UserSerializerRefreshToken(user, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        """
+        Delete a user by ID
+        """
+        user = get_object_or_404(User, id=pk)
+        user.delete()
+        return Response({'detail': 'User was deleted.'}, status=status.HTTP_200_OK)
