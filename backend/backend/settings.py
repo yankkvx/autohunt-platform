@@ -28,6 +28,7 @@ INSTALLED_APPS = [
 
     'account.apps.AccountConfig',
     'catalog.apps.CatalogConfig',
+    'ads.apps.AdsConfig',
 ]
 
 REST_FRAMEWORK = {
