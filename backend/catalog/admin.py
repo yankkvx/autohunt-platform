@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InterriorMaterial
+from .models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InteriorMaterial
 # Register your models here.
 
 
@@ -10,4 +10,4 @@ admin.site.register(FuelType)
 admin.site.register(DriveType)
 admin.site.register(Transmission)
 admin.site.register(Color)
-admin.site.register(InterriorMaterial)
+admin.site.register(InteriorMaterial)

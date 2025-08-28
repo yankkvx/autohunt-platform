@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAdminUser, AllowAny
-from .models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InterriorMaterial
+from .models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InteriorMaterial
 from .serializers import BrandSerializer, ModelCarSerializer, BodyTypeSerializer, FuelTypeSerializer, DriveTypeSerializer, TransmissionSerializer, ColorSerializer, InteriorMaterialSerializer
 
 
@@ -75,7 +75,7 @@ class ColorViewSet(viewsets.ModelViewSet):
 
 
 class InteriorMaterialViewSet(viewsets.ModelViewSet):
-    queryset = InterriorMaterial.objects.all()
+    queryset = InteriorMaterial.objects.all()
     serializer_class = InteriorMaterialSerializer
 
     def get_permissions(self):

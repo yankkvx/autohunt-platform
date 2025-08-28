@@ -83,12 +83,12 @@ class Color(models.Model):
         return self.name
 
 
-class InterriorMaterial(models.Model):
+class InteriorMaterial(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Interrior material'
+        verbose_name = 'Interior material'
         verbose_name_plural = 'Interior materials'
 
     def __str__(self):

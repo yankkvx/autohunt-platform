@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InterriorMaterial
+from .models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InteriorMaterial
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -53,5 +53,5 @@ class ColorSerializer(serializers.ModelSerializer):
 
 class InteriorMaterialSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InterriorMaterial
+        model = InteriorMaterial
         fields = ['id', 'name']
