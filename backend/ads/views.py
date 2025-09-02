@@ -45,7 +45,7 @@ class AdViewSet(viewsets.ModelViewSet):
 
     # Helper methot to ensure that only owner of Ad can modify it
     def check_ownership(self, ad):
-        if ad.user != self.request.user:
+        if not self.request.user.is_staff and ad.user != self.request.user:
             raise PermissionDenied('You can modify only your own ads.')
 
     def perform_create(self, serializer):
