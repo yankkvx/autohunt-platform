@@ -10,7 +10,9 @@ class AdImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'image',)
 
 
+# Main Ad model serializer
 class AdSerializer(serializers.ModelSerializer):
+    # Nested read-only serializers to display detailed info
     brand = BrandSerializer(read_only=True)
     model = ModelCarSerializer(read_only=True)
     body_type = BodyTypeSerializer(read_only=True)
@@ -20,8 +22,11 @@ class AdSerializer(serializers.ModelSerializer):
     interior_color = ColorSerializer(read_only=True)
     exterior_color = ColorSerializer(read_only=True)
     interior_material = InteriorMaterialSerializer(read_only=True)
-    images = AdImageSerializer(many=True, read_only=True)
 
+    # Nested image serializer
+    images = AdImageSerializer(many=True, required=False)
+
+    # Write-only fields for creating? updating realtionships using pk
     brand_id = serializers.PrimaryKeyRelatedField(
         queryset=Brand.objects.all(), source='brand', write_only=True)
     model_id = serializers.PrimaryKeyRelatedField(
@@ -52,3 +57,23 @@ class AdSerializer(serializers.ModelSerializer):
             'drive_type_id', 'transmission_id', 'exterior_color_id', 'interior_color_id', 'interior_material_id'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
+
+# Less detailed serializer, that optimized for listing Ads
+class AdListSerializer(serializers.ModelSerializer):
+    # Dispaly fields as string instead of nested objects
+    user = serializers.StringRelatedField()
+    brand = serializers.StringRelatedField()
+    model = serializers.StringRelatedField()
+    body_type = serializers.StringRelatedField()
+    fuel_type = serializers.StringRelatedField()
+    transmission = serializers.StringRelatedField()
+    exterior_color = serializers.StringRelatedField()
+    images = AdImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Ad
+        fields = [
+            'id', 'title', 'price', 'year', 'mileage', 'user', 'brand', 'model', 'body_type',
+            'fuel_type', 'transmission', 'exterior_color', 'condition', 'created_at', 'images'
+        ]
