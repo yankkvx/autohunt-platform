@@ -9,6 +9,8 @@ from django.shortcuts import get_object_or_404
 from .models import Ad, AdImage
 from .serializers import AdSerializer, AdListSerializer, AdImageSerializer
 from .filters import AdFilter
+from .utils import validate_image_file
+from .tasks import process_image_watermark
 
 
 class AdViewSet(viewsets.ModelViewSet):
@@ -76,12 +78,37 @@ class AdViewSet(viewsets.ModelViewSet):
         if not images:
             return Response({'detail': 'No images provided'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Validate images
+        for img in images:
+            is_valid, error_message = validate_image_file(img)
+            if not is_valid:
+                return Response(
+                    {'detail': f'Invalid image {img.name}: {error_message}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         # Bulk create Adimage instances
         images_data = [{'image': img} for img in images]
         serializer = AdImageSerializer(data=images_data, many=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save(ad=ad)  # associate new images with current ad
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        created_images = serializer.save(ad=ad)
+
+        image_ids = [img.id for img in created_images]
+
+        # Async watermark process for each image
+        for image_id in image_ids:
+            try:
+                result = process_image_watermark.delay(
+                    image_id, 'AutoHunt', 0.7)
+                print(
+                    f'Task sent to celery for image {image_id}, task ID: {result.id}')
+
+            except Exception as e:
+                print(f'An error occured during sending task to celery: {e}')
+        return Response({
+            'images': serializer.data,
+            'message': 'Images were uploaded. The watermark process started in the background mode.'
+        }, status=status.HTTP_201_CREATED)
 
         # new_images = []
         # for image in images:
