@@ -1,9 +1,8 @@
 import io
 from PIL import Image, ImageDraw, ImageFont
-from django.conf import settings
 from django.core.files.base import ContentFile
 import os
-import logging
+
 
 MAX_IMAGE_SIZE = (1920, 1080)
 MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -38,7 +37,7 @@ def validate_image_file(uploaded_file):
     file_type = os.path.splitext(uploaded_file.name)[1].lower()
 
     if file_type not in allowed_types:
-        return False, f'Not valid file type. Allowed: {', '.join(allowed_types)}'
+        return False, f'Not valid file type. Allowed: {", ".join(allowed_types)}'
 
     # Verify file is a valid image
     try:
@@ -52,14 +51,14 @@ def validate_image_file(uploaded_file):
     return True, None
 
 
-def add_watermark_to_image(image_path, watermark_text='AutoHunt', opacity=0.7):
+def add_watermark_to_image(image_file, watermark_text='AutoHunt', opacity=0.7):
     """
     Add a text watermark in the right-bottom corner of image
     """
 
     try:
         # Open an image
-        with Image.open(image_path) as img:
+        with Image.open(image_file) as img:
             # Resize image if it is too large
             img = optimize_image_size(img)
 
@@ -83,7 +82,7 @@ def add_watermark_to_image(image_path, watermark_text='AutoHunt', opacity=0.7):
             img_width, img_height = img.size
             min_side = min(img_width, img_height)
 
-            # Chose font size depending on image size
+            # Choose font size depending on image size
             if min_side <= 400:
                 font_size = max(12, min_side // 25)
             elif min_side <= 800:
@@ -104,7 +103,7 @@ def add_watermark_to_image(image_path, watermark_text='AutoHunt', opacity=0.7):
             margin_x = max(10, int(img_width * 0.05))
             margin_y = max(10, int(img_height * 0.05))
 
-            # Coordiantes for right bottom corner placement
+            # Coordinates for right bottom corner placement
             x = img_width - text_width - margin_x
             y = img_height - text_height - margin_y
 
@@ -129,7 +128,9 @@ def add_watermark_to_image(image_path, watermark_text='AutoHunt', opacity=0.7):
 
 
 def process_uploaded_image(image_file, watermark_text='AutoHunt', opacity=0.7):
+    # Reset file pointer to the beginning of the file
     image_file.seek(0)
+    # Aplly watermark using add_watermark_to_image function
     watermarked_image = add_watermark_to_image(
         image_file, watermark_text, opacity)
 
@@ -137,21 +138,31 @@ def process_uploaded_image(image_file, watermark_text='AutoHunt', opacity=0.7):
 
 
 def create_watermarked_file(uploaded_file, watermark_text='AutoHunt', opacity=0.7):
+    """
+    Validate an uploaded file, add watermark and return it as a new file.
+    """
+    # Validate the uploaded file to ensure it is a valid image
     is_valid, error_message = validate_image_file(uploaded_file)
     if not is_valid:
         raise ValueError(error_message)
 
     try:
+        # Apply watermark to the uploaded image
         watermarked_image = process_uploaded_image(
             uploaded_file, watermark_text, opacity)
+
+        # create an in memory buffer to store image
         buffer = io.BytesIO()
 
         file_type = os.path.splitext(uploaded_file.name)[1].lower()
+        # Detect the original file type to determine output format
         if file_type in ['.jpg', '.jpeg']:
             format = 'JPEG'
+            # JPEG doesnt support transparency
             if watermarked_image.mode == 'RGBA':
                 background = Image.new(
                     'RGB', watermarked_image.size, (255, 255, 255))
+                # Paste GRBA image onto the white background, saving transparency
                 background.paste(watermarked_image,
                                  mask=watermarked_image.split()[-1])
                 watermarked_image = background
@@ -162,19 +173,26 @@ def create_watermarked_file(uploaded_file, watermark_text='AutoHunt', opacity=0.
         else:
             format = 'PNG'
 
+        # Save option for pillow
         save_kwargs = {
             'format': format,
             'optimize': True,
         }
 
+        # JPEG options for better compression and quality
         if format == 'JPEG':
             save_kwargs['quality'] = WATERMARK_QUALITY
             save_kwargs['progressive'] = True
 
+        # Save the watermarked image to the buffer with settings
         watermarked_image.save(buffer, **save_kwargs)
 
+        # Reset buffer
         buffer.seek(0)
-        new_file = ContentFile(buffer.getvalue(), name=uploaded_file.name)
+        buffer_data = buffer.getvalue()
+
+        # Wrap buffer content into a django content file, so it behaves, like an uploaded file
+        new_file = ContentFile(buffer_data, name=uploaded_file.name)
         return new_file
 
     except Exception as e:
@@ -182,34 +200,43 @@ def create_watermarked_file(uploaded_file, watermark_text='AutoHunt', opacity=0.
 
 
 def save_watermarked_image(watermarked_image, original_filename, upload_path):
+    """
+    Save a watermarked image to a given filepath
+    """
+    # Ensure the target directory exists or create it if its necessary
     os.makedirs(os.path.dirname(upload_path), exist_ok=True)
 
+    # Extract the file type to detect the format
     file_type = os.path.splitext(original_filename)[1].lower()
 
+    # Detect the original file type to determine output format
     if file_type in ['.jpg', '.jpeg']:
         format = 'JPEG'
         if watermarked_image.mode == 'RGBA':
             background = Image.new(
                 'RGB', watermarked_image.size, (255, 255, 255))
+            # Paste RGBA image onto white background using alpha channel as a mask
             background.paste(watermarked_image,
                              mask=watermarked_image.split()[-1])
             watermarked_image = background
-        elif file_type == '.png':
-            format = 'PNG'
-        elif file_type == '.webp':
-            format = 'WEBP'
-        else:
-            format = 'PNG'
+    elif file_type == '.png':
+        format = 'PNG'
+    elif file_type == '.webp':
+        format = 'WEBP'
+    else:
+        format = 'PNG'
 
-        save_kwargs = {
-            'format': format,
-            'optimize': True,
-        }
+    # Save options for pillow
+    save_kwargs = {
+        'format': format,
+        'optimize': True,
+    }
+    # JPEG options for better comperssion and quality
+    if format == 'JPEG':
+        save_kwargs['quality'] = WATERMARK_QUALITY
+        save_kwargs['progressive'] = True
 
-        if format == 'JPEG':
-            save_kwargs['quality'] = WATERMARK_QUALITY
-            save_kwargs['progerssive'] = True
+    # Save image to the specified path with the selected format and options
+    watermarked_image.save(upload_path, **save_kwargs)
 
-        watermarked_image.save(upload_path, **save_kwargs)
-
-        return upload_path
+    return upload_path
