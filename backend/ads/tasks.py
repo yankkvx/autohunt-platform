@@ -1,8 +1,14 @@
+import os
 import logging
+import django
 from celery import shared_task
 from django.core.files.storage import default_storage
 from .utils import create_watermarked_file, validate_image_file
 from .models import AdImage
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+django.setup()
+
 
 logger = logging.getLogger(__name__)
 
@@ -12,16 +18,17 @@ def process_image_watermark(image_id, watermark_text='AutoHunt', opacity=0.7):
     """
     Celery task that applies watermark to an uploaded image
     """
+    logger.info(f'Starting process with image id={image_id}')
     try:
         ad_image = AdImage.objects.get(id=image_id)
-        if not ad_image:
-            logger.error('Image not found.')
+        if not ad_image.image:
+            logger.error(f'Image id={image_id} not found.')
             return
         # Open the image in binary mode
         image_file = ad_image.image.open('rb')
 
         # Validate the image using validate_image_file function
-        is_valid, error_message = validate_image_file(image_id)
+        is_valid, error_message = validate_image_file(image_file)
         if not is_valid:
             logger.error(
                 f'Invalid image with id={image_id}: {error_message}')
@@ -33,7 +40,7 @@ def process_image_watermark(image_id, watermark_text='AutoHunt', opacity=0.7):
 
         # Create a new filename for the watermarked image
         original_name = ad_image.image.name
-        name_parts = original_name.splitext(original_name)
+        name_parts = os.path.splitext(original_name)
         new_name = f'{name_parts[0]}_watermarked{name_parts[1]}'
 
         # Save the new watermarked image using django storafe
@@ -44,7 +51,12 @@ def process_image_watermark(image_id, watermark_text='AutoHunt', opacity=0.7):
         ad_image.save()
 
         logger.info(f'Image with {image_id} id was watermarked.')
+        return f'Image with {image_id} шв was watermarked.'
     except AdImage.DoesNotExist:
-        logger(f'Image with id={image_id} does not exist.')
+        error_msg = f'Image with id={image_id} does not exist.'
+        logger.error(error_msg)
+        return error_msg
     except Exception as e:
-        logger.error(f'Error with {image_id} id: {str(e)}')
+        error_msg = f'Error with {image_id} id: {str(e)}'
+        logger.error(error_msg)
+        return error_msg
