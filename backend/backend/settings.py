@@ -172,3 +172,33 @@ CORS_ALLOW_ALL_ORIGINS = True
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Celery configuration
+# if running inside docker use redis:6379
+# if running locally use localhosy:6379
+CELERY_BROKER_URL = 'redis://redis:6379/0' if os.getenv(
+    'DOCKER_ENV') else 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0' if os.getenv(
+    'DOCKER_ENV') else 'redis://localhost:6379/0'
+
+# Accepter content formats for tasks
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Custom routing for tasks
+CELERY_TASK_ROUTES = {
+    'ads.tasks.process_image_watermark': {'queue': 'celery'},
+    'ads.tasks.bulk_process_images': {'queue': 'celery'},
+}
+
+# Soft time limit in seconds. If task runs linger it will raise a softtimelimiexceeded exceptionsa
+CELERY_TASK_SOFT_TIME_LIMIT = 300
+CELERY_TASK_TIME_LIMIT = 600
+
+# Started state for tasks
+CELERY_TASK_TRACK_STARTED = True
+# Send events when tasks are sent to the brocker
+CELERY_TASK_SEND_SENT_EVENT = True
