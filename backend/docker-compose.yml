@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+    web:
+        build: .
+        ports:
+            - "8000:8000"
+        volumes:
+            - .:/app
+            - static_volume:/app/static/images # Shared static files volume
+        environment:
+            - DEBUG=${DEBUG}
+            - SECRET_KEY=${SECRET_KEY}
+            - DOCKER_ENV=${DOCKER_ENV}
+        depends_on:
+            - redis # Wait for redis before starting
+        command: python manage.py runserver 0.0.0.0:8000
+        restart: unless-stopped
+
+    celery_worker:
+        build: .
+        volumes:
+            - .:/app
+            - static_volume:/app/static/images # Reuse the same static files volume
+        environment:
+            - DEBUG=${DEBUG}
+            - SECRET_KEY=${SECRET_KEY}
+            - DOCKER_ENV=${DOCKER_ENV}
+        depends_on:
+            - redis # Requires redis for task queue
+        command: celery -A backend worker --loglevel=info
+        restart: unless-stopped
+
+    redis:
+        image: redis:7-alpine
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data # Save redis data outside container
+        restart: unless-stopped
+        command: redis-server --appendonly yes
+
+volumes:
+    static_volume:
+    redis_data:
