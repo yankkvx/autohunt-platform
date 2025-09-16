@@ -16,7 +16,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             }}
         >
             <Header />
-            <Box sx={{ flex: 1, pt: 10 }}>{children}</Box>
+            <Box sx={{ flex: 1, pt: 9 }}>{children}</Box>
             <Footer />
         </Box>
     );
