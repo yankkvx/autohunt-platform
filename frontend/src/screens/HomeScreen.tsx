@@ -4,6 +4,7 @@ import HeroSection from "../components/HomeScreen/HeroSection";
 import FilterSection from "../components/HomeScreen/FilterSection";
 import BodyTypeSection from "../components/HomeScreen/BodyTypeSection";
 import LatestAdsSection from "../components/HomeScreen/LatestAdsSection";
+import BrandSection from "../components/HomeScreen/BrandSection";
 
 const HomeScreen = () => {
     return (
@@ -12,6 +13,7 @@ const HomeScreen = () => {
             <FilterSection />
             <BodyTypeSection />
             <LatestAdsSection />
+            <BrandSection />
         </MainLayout>
     );
 };
