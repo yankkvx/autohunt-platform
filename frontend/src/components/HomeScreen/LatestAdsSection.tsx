@@ -13,9 +13,20 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-import { cars } from "../../ads";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchLatestCars } from "../../store/slices/latestCarSlice";
 
 const LatestAdsSection = () => {
+    const dispatch = useAppDispatch();
+    const { cars, loading, error } = useAppSelector(
+        (state) => state.latestCars
+    );
+
+    useEffect(() => {
+        dispatch(fetchLatestCars());
+    }, [dispatch]);
+
     const carouselSettings = {
         dots: true,
         infinite: false,
@@ -46,6 +57,9 @@ const LatestAdsSection = () => {
             },
         ],
     };
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
 
     return (
         <Container maxWidth="lg" sx={{ p: 3 }}>
@@ -121,48 +135,60 @@ const LatestAdsSection = () => {
                                         mt: 1,
                                     }}
                                 >
-                                    <Chip
-                                        label={car.year}
-                                        sx={{
-                                            fontSize: "0.9rem",
-                                            borderRadius: 3,
-                                        }}
-                                    />
-                                    <Chip
-                                        label={car.condition}
-                                        sx={{
-                                            fontSize: "0.9rem",
-                                            borderRadius: 3,
-                                        }}
-                                    />
-                                    <Chip
-                                        label={car.transmission.name}
-                                        sx={{
-                                            fontSize: "0.9rem",
-                                            borderRadius: 3,
-                                        }}
-                                    />
-                                    <Chip
-                                        label={car.body_type.name}
-                                        sx={{
-                                            fontSize: "0.9rem",
-                                            borderRadius: 3,
-                                        }}
-                                    />
-                                    <Chip
-                                        label={car.drive_type.name}
-                                        sx={{
-                                            fontSize: "0.9rem",
-                                            borderRadius: 3,
-                                        }}
-                                    />
-                                    <Chip
-                                        label={car.fuel_type.name}
-                                        sx={{
-                                            fontSize: "0.9rem",
-                                            borderRadius: 3,
-                                        }}
-                                    />
+                                    {car.year && (
+                                        <Chip
+                                            label={car.year}
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                borderRadius: 3,
+                                            }}
+                                        />
+                                    )}
+                                    {car.condition && (
+                                        <Chip
+                                            label={car.condition}
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                borderRadius: 3,
+                                            }}
+                                        />
+                                    )}
+                                    {car.transmission?.name && (
+                                        <Chip
+                                            label={car.transmission.name}
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                borderRadius: 3,
+                                            }}
+                                        />
+                                    )}
+                                    {car.body_type?.name && (
+                                        <Chip
+                                            label={car.body_type.name}
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                borderRadius: 3,
+                                            }}
+                                        />
+                                    )}
+                                    {car.drive_type?.name && (
+                                        <Chip
+                                            label={car.drive_type.name}
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                borderRadius: 3,
+                                            }}
+                                        />
+                                    )}
+                                    {car.fuel_type?.name && (
+                                        <Chip
+                                            label={car.fuel_type.name}
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                borderRadius: 3,
+                                            }}
+                                        />
+                                    )}
                                 </Box>
                                 <Box
                                     display="flex"
@@ -187,7 +213,7 @@ const LatestAdsSection = () => {
                                 <Box pt={2}>
                                     <Button
                                         component={LinkRouter}
-                                        to={`http://localhost:5173/ads/${car.id}`}
+                                        to={`/ads/${car.id}`}
                                         variant="contained"
                                         color="primary"
                                         fullWidth
