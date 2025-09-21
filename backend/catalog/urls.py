@@ -13,5 +13,5 @@ router.register('colors', ColorViewSet)
 router.register('interior-materials', InteriorMaterialViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('catalog/', include(router.urls)),
 ]
