@@ -1,45 +1,12 @@
 import { Box, Container, Grid, Button, Collapse } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchCatalog } from "../../store/slices/catalogSlice";
 import { useSelectStyles } from "../../styles/useSelectStyles";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
-
-const brands = [
-    { value: "BMW", label: "BMW" },
-    { value: "Audi", label: "Audi" },
-    { value: "Toyota", label: "Toyota" },
-];
-
-const models = [
-    { value: "X5", label: "X5" },
-    { value: "A4", label: "A4" },
-    { value: "Supra", label: "Supra" },
-];
-
-const bodyTypes = [
-    { value: "Sedan", label: "Sedan" },
-    { value: "SUV", label: "SUV" },
-    { value: "Coupe", label: "Coupe" },
-];
-
-const fuelTypes = [
-    { value: "Petrol", label: "Petrol" },
-    { value: "Diesel", label: "Diesel" },
-    { value: "Electric", label: "Electric" },
-];
-
-const transmission = [
-    { value: "Automatic", label: "Automatic" },
-    { value: "Manual", label: "Manual" },
-];
-
-const driveTypes = [
-    { value: "AWD", label: "AWD" },
-    { value: "FWD", label: "FWD" },
-    { value: "RWD", label: "RWD" },
-];
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1950 + 1 }, (_, i) => {
@@ -80,6 +47,21 @@ const batteryCapacities = Array.from({ length: 20 }, (_, i) => {
 });
 
 const FilterSection = () => {
+    const dispatch = useAppDispatch();
+    const {
+        brands,
+        models,
+        bodyTypes,
+        fuelTypes,
+        driveTypes,
+        transmissions,
+        loading,
+    } = useAppSelector((state) => state.catalog);
+
+    useEffect(() => {
+        dispatch(fetchCatalog());
+    }, [dispatch]);
+
     const selectStyles = useSelectStyles();
 
     const [showMore, setShowMore] = useState(false);
@@ -91,11 +73,10 @@ const FilterSection = () => {
         yearTo: null,
         mileageFrom: null,
         mileageTo: null,
-        fuel: null,
+        fuelType: null,
         transmission: [],
         driveType: [],
         bodyType: [],
-        color: [],
         priceFrom: null,
         priceTo: null,
         powerFrom: null,
@@ -108,10 +89,12 @@ const FilterSection = () => {
         batteryCapacityTo: null,
     });
 
-    const isElectricOrHybrid =
-        filters.fuelType?.value === "Electric" ||
-        filters.fuelType?.value === "Hybrid";
-
+    const selectedFuel = fuelTypes.find(
+        (ft) => ft.id === filters.fuelType?.value
+    );
+    const isElectricOrHybrid = selectedFuel
+        ? selectedFuel.name === "Electric" || selectedFuel.name === "Hybrid"
+        : false;
     const handleChange = (field: string, value: any) => {
         setFilters((prev: any) => ({ ...prev, [field]: value }));
     };
@@ -122,6 +105,39 @@ const FilterSection = () => {
             [field]: values ? values.map((v: any) => v.value) : [],
         }));
     };
+
+    const brandOptions = brands.map((b: any) => ({
+        value: b.id,
+        label: b.name,
+    }));
+
+    const modelOptions = models
+        .filter((m: any) =>
+            m.brand ? m.brand.id === filters.brand?.value : true
+        )
+        .map((m: any) => ({ value: m.id, label: m.name }));
+
+    const bodyTypeOptions = bodyTypes.map((bt: any) => ({
+        value: bt.id,
+        label: bt.name,
+    }));
+
+    const fuelTypeOptions = fuelTypes.map((ft: any) => ({
+        value: ft.id,
+        label: ft.name,
+    }));
+
+    const transmissionOptions = transmissions.map((t: any) => ({
+        value: t.id,
+        label: t.name,
+    }));
+
+    const driveTypeOptions = driveTypes.map((dt: any) => ({
+        value: dt.id,
+        label: dt.name,
+    }));
+
+    if (loading) return <p>Loading...</p>;
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -138,7 +154,7 @@ const FilterSection = () => {
                     {/* Brand */}
                     <Grid component="div">
                         <Select
-                            options={brands}
+                            options={brandOptions}
                             value={filters.brand}
                             onChange={(value) => handleChange("brand", value)}
                             placeholder="Brand"
@@ -149,7 +165,7 @@ const FilterSection = () => {
                     {/* Model */}
                     <Grid component="div">
                         <Select
-                            options={models}
+                            options={modelOptions}
                             value={filters.model}
                             onChange={(value) => handleChange("model", value)}
                             placeholder="Model"
@@ -215,7 +231,7 @@ const FilterSection = () => {
                     {/* Transmission */}
                     <Grid component="div">
                         <Select
-                            options={transmission}
+                            options={transmissionOptions}
                             value={filters.transmission}
                             onChange={(value) =>
                                 handleChange("transmission", value)
@@ -228,7 +244,7 @@ const FilterSection = () => {
                     {/* Fuel type */}
                     <Grid component="div">
                         <Select
-                            options={fuelTypes}
+                            options={fuelTypeOptions}
                             value={filters.fuelType}
                             onChange={(value) =>
                                 handleChange("fuelType", value)
@@ -414,7 +430,7 @@ const FilterSection = () => {
                             {/* Body type */}
                             <Grid component="div">
                                 <Select
-                                    options={bodyTypes}
+                                    options={bodyTypeOptions}
                                     value={filters.bodyType.map(
                                         (b: string) => ({
                                             value: b,
@@ -434,7 +450,7 @@ const FilterSection = () => {
                             {/* Drive type */}
                             <Grid component="div">
                                 <Select
-                                    options={driveTypes}
+                                    options={driveTypeOptions}
                                     value={filters.driveType}
                                     onChange={(value) =>
                                         handleChange("driveType", value)
