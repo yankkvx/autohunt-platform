@@ -13,6 +13,19 @@ class UserSerializer(serializers.ModelSerializer):
                   'is_active', 'is_staff']
 
 
+class UserShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'account_type', 'first_name', 'company_name']
+
+
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'account_type', 'first_name', 'last_name',
+                  'company_name', 'email', 'phone_number', 'profile_image']
+
+
 class UserSerializerRefreshToken(UserSerializer):
     token = serializers.SerializerMethodField(read_only=True)
 

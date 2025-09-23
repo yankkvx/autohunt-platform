@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from catalog.serializers import BrandSerializer, ModelCarSerializer, BodyTypeSerializer, FuelTypeSerializer, DriveTypeSerializer, TransmissionSerializer, ColorSerializer, InteriorMaterialSerializer
 from catalog.models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InteriorMaterial
+from account.serializers import UserBasicSerializer, UserShortSerializer
 from .models import Ad, AdImage
 
 
@@ -13,6 +14,7 @@ class AdImageSerializer(serializers.ModelSerializer):
 # Main Ad model serializer
 class AdSerializer(serializers.ModelSerializer):
     # Nested read-only serializers to display detailed info
+    user = UserBasicSerializer(read_only=True)
     brand = BrandSerializer(read_only=True)
     model = ModelCarSerializer(read_only=True)
     body_type = BodyTypeSerializer(read_only=True)
@@ -62,7 +64,7 @@ class AdSerializer(serializers.ModelSerializer):
 # Less detailed serializer, that optimized for listing Ads
 class AdListSerializer(serializers.ModelSerializer):
     # Dispaly fields as string instead of nested objects
-    user = serializers.StringRelatedField()
+    user = UserShortSerializer(read_only=True)
     brand = serializers.StringRelatedField()
     model = serializers.StringRelatedField()
     body_type = serializers.StringRelatedField()
