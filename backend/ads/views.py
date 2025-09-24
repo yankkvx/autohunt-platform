@@ -11,6 +11,7 @@ from .serializers import AdSerializer, AdListSerializer, AdImageSerializer
 from .filters import AdFilter
 from .utils import validate_image_file
 from .tasks import process_image_watermark
+from .pagination import AdPagination
 
 
 class AdViewSet(viewsets.ModelViewSet):
@@ -21,6 +22,7 @@ class AdViewSet(viewsets.ModelViewSet):
     """
     # Base queryset for all actions
     queryset = Ad.objects.all()
+    pagination_class = AdPagination
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = AdFilter
