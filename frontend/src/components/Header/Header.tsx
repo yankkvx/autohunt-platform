@@ -41,7 +41,8 @@ const Header = () => {
                 >
                     <Box sx={{ px: { xs: 1, sm: 2 } }}>
                         <Link
-                            href="/"
+                            component={LinkRouter}
+                            to="/"
                             underline="none"
                             color="inherit"
                             sx={{ color: theme.palette.text.primary }}
@@ -75,7 +76,8 @@ const Header = () => {
                     >
                         <ColorModeToggle />
                         <Link
-                            href="/ads"
+                            component={LinkRouter}
+                            to="/ads"
                             underline="none"
                             color="inherit"
                             sx={{ color: theme.palette.text.primary }}
