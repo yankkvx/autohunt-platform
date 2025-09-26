@@ -1,6 +1,40 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+    createSlice,
+    createAsyncThunk,
+    type PayloadAction,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import { MAIN_URL } from "../../api-config";
+
+interface NestedField {
+    id: number;
+    name: string;
+}
+
+interface UserBase {
+    id: number;
+    account_type: string;
+    first_name: string;
+    company_name?: string;
+}
+
+interface UserDetail extends UserBase {
+    last_name?: string;
+    email: string;
+    phone_number: string;
+    profile_image: string;
+}
+
+interface Brand {
+    id: number;
+    name: string;
+}
+
+interface Model {
+    id: number;
+    name: string;
+    brand: Brand;
+}
 
 interface CarImage {
     id: number;
@@ -12,13 +46,36 @@ interface Car {
     title: string;
     price: number;
     year: number;
-    user: {
-        id: number;
-        account_type: string;
-        first_name: string;
-        company_name: string;
-    };
+    user: UserBase;
     images: CarImage[];
+}
+
+interface CarDetailes extends Car {
+    user: UserDetail;
+    description: string;
+    brand: Brand;
+    model: Model;
+    mileage?: number;
+    power?: number;
+    capacity?: number;
+    battery_power?: number;
+    battery_capacity?: number;
+    vin?: string;
+    warranty?: boolean;
+    airbag?: boolean;
+    air_conditioning?: boolean;
+    number_of_seats?: number;
+    number_of_doors?: number;
+    owner_count?: number;
+    is_first_owner?: boolean;
+    condition?: string;
+    body_type?: NestedField;
+    fuel_type?: NestedField;
+    drive_type?: NestedField;
+    transmission?: NestedField;
+    exterior_color?: NestedField;
+    interior_color?: NestedField;
+    interior_material?: NestedField;
 }
 
 interface AdsState {
@@ -29,6 +86,7 @@ interface AdsState {
     currentPage: number;
     loading: boolean;
     error: string | null;
+    currentAd: CarDetailes | null;
 }
 
 const initialState: AdsState = {
@@ -39,6 +97,7 @@ const initialState: AdsState = {
     currentPage: 1,
     loading: false,
     error: null,
+    currentAd: null,
 };
 
 export const fetchAds = createAsyncThunk(
@@ -143,6 +202,14 @@ export const fetchAds = createAsyncThunk(
     }
 );
 
+export const fetchAdById = createAsyncThunk(
+    "/ads/fetchAdById",
+    async (id: number) => {
+        const response = await axios.get(`${MAIN_URL}/ads/${id}/`);
+        return response.data;
+    }
+);
+
 const adsSlice = createSlice({
     name: "ads",
     initialState,
@@ -163,6 +230,22 @@ const adsSlice = createSlice({
             .addCase(fetchAds.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || "Failed to fetch ads.";
+            })
+
+            // fetchAdById
+            .addCase(fetchAdById.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(
+                fetchAdById.fulfilled,
+                (state, action: PayloadAction<CarDetailes>) => {
+                    state.loading = false;
+                    state.currentAd = action.payload;
+                }
+            )
+            .addCase(fetchAdById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || "Failed to fetch ad.";
             });
     },
 });
