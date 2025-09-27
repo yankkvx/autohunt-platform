@@ -18,7 +18,7 @@ interface UserBase {
     company_name?: string;
 }
 
-interface UserDetail extends UserBase {
+export interface UserDetail extends UserBase {
     last_name?: string;
     email: string;
     phone_number: string;
@@ -36,7 +36,7 @@ interface Model {
     brand: Brand;
 }
 
-interface CarImage {
+export interface CarImage {
     id: number;
     image: string;
 }
@@ -50,7 +50,7 @@ interface Car {
     images: CarImage[];
 }
 
-interface CarDetailes extends Car {
+export interface CarDetailes extends Car {
     user: UserDetail;
     description: string;
     brand: Brand;
