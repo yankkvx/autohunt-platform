@@ -13,7 +13,7 @@ interface User {
     refresh?: string;
 }
 
-interface RegisterUser {
+export interface RegisterUser {
     email: string;
     password: string;
     first_name: string;
@@ -23,7 +23,7 @@ interface RegisterUser {
     company_name?: string;
 }
 
-interface LoginUser {
+export interface LoginUser {
     email: string;
     password: string;
 }
@@ -71,9 +71,9 @@ export const loginUser = createAsyncThunk(
 export const fetchCurrentUser = createAsyncThunk(
     "auth/fetchCurrentUser",
     async (_, { rejectWithValue, getState }) => {
+        const state: any = getState();
+        const token = state.auth.user?.access;
         try {
-            const state: any = getState();
-            const token = state.auth.user?.access;
             const response = await axios.get(`${MAIN_URL}/user-management/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -108,7 +108,7 @@ const authSlice = createSlice({
             .addCase(registerUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error =
-                    action.error.message || "Failed to register user.";
+                    (action.payload as string) || "Failed to register user.";
             })
 
             // Login
@@ -121,7 +121,8 @@ const authSlice = createSlice({
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || "Failed to login user.";
+                state.error =
+                    (action.payload as string) || "Failed to login user.";
             })
 
             // Fetch current user
@@ -134,7 +135,8 @@ const authSlice = createSlice({
             })
             .addCase(fetchCurrentUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message || "Failed to fetch user.";
+                state.error =
+                    (action.payload as string) || "Failed to fetch user.";
             });
     },
 });
