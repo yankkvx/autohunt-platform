@@ -20,7 +20,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { user, loading } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
-        dispatch(fetchCurrentUser());
+        const token = localStorage.getItem("user")
+            ? JSON.parse(localStorage.getItem("user")!).access
+            : null;
+        if (token) {
+            dispatch(fetchCurrentUser());
+        }
     }, [dispatch]);
 
     return (
