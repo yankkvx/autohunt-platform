@@ -1,18 +1,21 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
-from .serializers import UserSerializer, UserSerializerRefreshToken, MyTokenObtainPairSerializer
+from django.db import transaction, IntegrityError
+from .serializers import (UserSerializer, RegisterSerializer,
+                          UpdateUserSerializer, DeleteAccountSerializer,
+                          UserSerializerRefreshToken, MyTokenObtainPairSerializer)
 
 
 # Custom JWT token view using serializer
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    permission_classes = [AllowAny]
 
 
 class RegisterView(APIView):
@@ -21,37 +24,23 @@ class RegisterView(APIView):
     """
 
     def post(self, request):
-        data = request.data
 
-        # Extract mandatory fields
-        email = data['email']
-        password = data['password']
-        account_type = data.get('account_type', User.ACCOUNT_PRIVATE)
+        serializer = RegisterSerializer(data=request.data)
 
-        # Check if a user with the same email already exists
-        if User.objects.filter(email=data['email']).exists():
-            return Response({'detail': 'User with this email is already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-        # Check of a user with the same phone number is aready exists
-        if User.objects.filter(phone_number=data['phone_number']).exists():
-            return Response({'detail': 'User with this phone number is already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Create a new user using the create_user helper (handles password hashing)
-            user = User.objects.create_user(
-                email=email,
-                username=email,  # Email as username
-                password=password,
-                account_type=account_type,
-                first_name=data['first_name'],
-                last_name=data['last_name'],
-                phone_number=data['phone_number'],
-                company_name=data['company_name'] if account_type == User.ACCOUNT_COMPANY else None
-            )
-            serializer = UserSerializerRefreshToken(user, many=False)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            with transaction.atomic():
+                user = serializer.save()
 
+                response_serializer = UserSerializerRefreshToken(user)
+
+                return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        except IntegrityError as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'detail': 'Registration failed.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserManagement(APIView):
@@ -70,7 +59,7 @@ class UserManagement(APIView):
             serializer = UserSerializer(user, many=False)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({'detail': f'An error occured during getting enformation: {e}.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Failed to retrieve profile.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request):
         """
@@ -81,38 +70,21 @@ class UserManagement(APIView):
         - If password is provided, it will be hashed.
         """
         user = request.user
-        data = request.data
+        serializer = UpdateUserSerializer(
+            user, data=request.data, partial=True, context={'request': request})
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            # Update common profile fields
-            user.first_name = data.get('first_name', user.first_name)
-            user.last_name = data.get('last_name', user.last_name)
-            user.phone_number = data.get('phone_number', user.phone_number)
-            user.about = data.get('about', user.about)
-            user.telegram = data.get('telegram', user.telegram)
-            user.twitter = data.get('twitter', user.twitter)
-            user.instagram = data.get('instagram', user.instagram)
-
-            profile_image = request.FILES.get('profile_image')
-            if profile_image:
-                user.profile_image = profile_image
-
-            # Extra field only for company accounts
-            if user.account_type == User.ACCOUNT_COMPANY:
-                user.company_name = data.get('company_name', user.company_name)
-                user.company_website = data.get(
-                    'company_website', user.company_website)
-                user.company_office = data.get(
-                    'company_office', user.company_office)
-
-            # If new password is provided hast it before saving
-            if data.get('password'):
-                user.password = make_password(data['password'])
-
-            user.save()
-            serializer = UserSerializerRefreshToken(user, many=False)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            with transaction.atomic():
+                serializer.save()
+                response_serializer = UserSerializerRefreshToken(user)
+                return Response(response_serializer.data, status=status.HTTP_200_OK)
+        except IntegrityError as e:
+            return Response({'detail': 'Phone number alredy exists.'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'detail': f'An error occured during updating information: {e}.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Failed to update profile.'}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         """
@@ -120,18 +92,22 @@ class UserManagement(APIView):
         Requires the correct password for confirmation/
         """
         user = request.user
-        password = request.data.get('password')
+        data = request.data
+        serializer = DeleteAccountSerializer(data=data)
 
-        # Ensure password is provided
-        if not password:
-            return Response({'detail': 'Password is required to delete account.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Verify password before deleting
+        password = serializer.validated_data['password']
+
         if not user.check_password(password):
-            return Response({'detail': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Incorrect password'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user.delete()
-        return Response({'detail': 'User was deleted.'}, status=status.HTTP_200_OK)
+        try:
+            user.delete()
+            return Response({'detail': 'Account successfully deleted.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Failed to delete account.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AdminUserManagement(APIView):
@@ -147,54 +123,85 @@ class AdminUserManagement(APIView):
         GET /users/ - list all users
         GET /user/<pk>/ - retrieve specific user
         """
-        if pk:
-            user = get_object_or_404(User, id=pk)
-            serializer = UserSerializer(user, many=False)
-        else:
-            users = User.objects.all()
-            serializer = UserSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            if pk:
+                user = get_object_or_404(User, id=pk)
+                serializer = UserSerializer(user, many=False)
+            else:
+                queryset = User.objects.all()
+
+                account_type = request.query_params.get('account_type')
+                if account_type:
+                    queryset = queryset.filter(account_type=account_type)
+
+                is_active = request.query_params.get('is_active')
+                if is_active is not None:
+                    queryset = queryset.filter(
+                        is_active=is_active.lower() == 'true')
+
+                search = request.query_params.get('search')
+                if search:
+                    queryset = queryset.filter(email__icontains=search) | queryset.filter(
+                        first_name__icontains=search) | queryset.filter(last_name__icontains=search)
+
+                serializer = UserSerializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'detail': 'Failed to retrieve users.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request, pk):
         """
         Update user information, including optional password and image
         """
         user = get_object_or_404(User, id=pk)
-        data = request.data
+        serializer = UpdateUserSerializer(
+            user, data=request.data, partial=True, context={'request': request})
 
-        # Update common profile fields
-        user.first_name = data.get('first_name', user.first_name)
-        user.last_name = data.get('last_name', user.last_name)
-        user.phone_number = data.get('phone_number', user.phone_number)
-        user.about = data.get('about', user.about)
-        user.telegram = data.get('telegram', user.telegram)
-        user.twitter = data.get('twitter', user.twitter)
-        user.instagram = data.get('instagram', user.instagram)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        profile_image = request.FILES.get('profile_image')
-        if profile_image:
-            user.profile_image = profile_image
+        try:
+            with transaction.atomic():
+                serializer.save()
+            response_serializer = UserSerializerRefreshToken(user)
 
-        # Extra field only for company accounts
-        if user.account_type == User.ACCOUNT_COMPANY:
-            user.company_name = data.get('company_name', user.company_name)
-            user.company_website = data.get(
-                'company_website', user.company_website)
-            user.company_office = data.get(
-                'company_office', user.company_office)
-
-        # If new password is provided hast it before saving
-        if data.get('password'):
-            user.password = make_password(data['password'])
-
-        user.save()
-        serializer = UserSerializerRefreshToken(user, many=False)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+        except IntegrityError as e:
+            return Response({'detail': 'Email or phone number already exists.'},
+                            status=status.HTTP_400_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'detail': 'Failed to update user.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, pk):
         """
         Delete a user by ID
         """
-        user = get_object_or_404(User, id=pk)
-        user.delete()
-        return Response({'detail': 'User was deleted.'}, status=status.HTTP_200_OK)
+        try:
+            user = get_object_or_404(User, id=pk)
+            user.delete()
+
+            return Response({'detail': 'User successfully deleted.'},
+                            status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Failed to delete user.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminToggleActive(APIView):
+    """Admin API endpoint for ban/unbanned user"""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            user = get_object_or_404(User, id=pk)
+            user.is_active = not user.is_active
+            user.save(update_fields=['is_active'])
+
+            return Response({'detail': f'User {'unbanned' if user.is_active else 'banned'}.',
+                             'is_active': user.is_active}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Failed to update user status.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
