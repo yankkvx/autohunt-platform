@@ -13,10 +13,9 @@ class User(AbstractUser):
     account_type = models.CharField(
         max_length=10, choices=ACCOUNT_TYPES, default=ACCOUNT_PRIVATE)
     email = models.EmailField(unique=True)
-    phone_number = models.CharField(
-        max_length=30, blank=True, null=True, unique=True)
-    first_name = models.CharField(max_length=25, blank=True, null=True)
-    last_name = models.CharField(max_length=25, blank=True, null=True)
+    phone_number = models.CharField(max_length=30, unique=True)
+    first_name = models.CharField(max_length=25)
+    last_name = models.CharField(max_length=25)
     about = models.TextField(max_length=250, null=True, blank=True)
     profile_image = models.ImageField(
         upload_to='images/profiles/', blank=True, null=True, default='defaults/default_profile.png')
