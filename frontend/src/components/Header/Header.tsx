@@ -14,10 +14,13 @@ import { Link as LinkRouter } from "react-router-dom";
 import { useState } from "react";
 import ColorModeToggle from "../ColorMode/ColorModeToggle";
 import HeaderDrawer from "./HeaderDrawer";
+import { useAuthServiceContext } from "../../context/AuthContext";
+import UserMenu from "./UserMenu";
 
 const Header = () => {
     const theme = useTheme();
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const { isAuthenticated } = useAuthServiceContext();
 
     return (
         <>
@@ -114,24 +117,29 @@ const Header = () => {
                         >
                             Create Listing
                         </Button>
-                        <Button
-                            component={LinkRouter}
-                            to="/login"
-                            variant="contained"
-                            color="secondary"
-                            sx={{
-                                fontSize: {
-                                    sm: "0.85rem",
-                                    md: "1rem",
-                                    lg: "1.15rem",
-                                },
-                                borderRadius: 2,
-                                textTransform: "none",
-                                boxShadow: "none",
-                            }}
-                        >
-                            Sign In
-                        </Button>
+
+                        {isAuthenticated ? (
+                            <UserMenu />
+                        ) : (
+                            <Button
+                                component={LinkRouter}
+                                to="/login"
+                                variant="contained"
+                                color="secondary"
+                                sx={{
+                                    fontSize: {
+                                        sm: "0.85rem",
+                                        md: "1rem",
+                                        lg: "1.15rem",
+                                    },
+                                    borderRadius: 2,
+                                    textTransform: "none",
+                                    boxShadow: "none",
+                                }}
+                            >
+                                Sign In
+                            </Button>
+                        )}
                     </Box>
                     <Box
                         sx={{
