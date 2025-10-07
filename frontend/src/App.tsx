@@ -3,9 +3,10 @@ import HomeScreen from "./screens/HomeScreen";
 import ColorToggle from "./components/ColorMode/CologToggle";
 import ListingsScreen from "./screens/ListingsScreen";
 import SpecificAdScreen from "./screens/SpecificAdScreen";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import AuthScreen from "./screens/AuthScreen";
+import ProtectedRoute from "./components/routes/ProtectedRoute";
+import ProfileScreen from "./screens/ProfileScreen";
 
 function App() {
     return (
@@ -17,6 +18,14 @@ function App() {
                         <Route path="/ads" element={<ListingsScreen />} />
                         <Route path="/ads/:id" element={<SpecificAdScreen />} />
                         <Route path="/login" element={<AuthScreen />} />
+                        <Route
+                            path="/profile"
+                            element={
+                                <ProtectedRoute>
+                                    <ProfileScreen />
+                                </ProtectedRoute>
+                            }
+                        />
                     </Routes>
                 </ColorToggle>
             </BrowserRouter>
