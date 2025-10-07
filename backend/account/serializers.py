@@ -126,6 +126,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'User with this phone number already exists.'
             )
+        return value
 
     def validate_password(self, value):
         if value:
