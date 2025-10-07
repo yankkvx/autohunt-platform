@@ -9,13 +9,20 @@ interface User {
     phone_number: string;
     account_type: string;
     company_name: string;
+    profile_image: string;
+    about?: string;
+    company_website?: string;
+    company_office?: string;
+    telegram?: string;
+    instagram?: string;
+    twitter?: string;
     access?: string;
     refresh?: string;
 }
-
 export interface RegisterUser {
     email: string;
     password: string;
+    password_confirm: string;
     first_name: string;
     last_name: string;
     phone_number: string;
@@ -28,10 +35,25 @@ export interface LoginUser {
     password: string;
 }
 
+export interface UpdateUserData extends Partial<Omit<User, "profile_image">> {
+    password?: string;
+    profile_image?: File;
+    about?: string;
+    company_website?: string;
+    company_office?: string;
+    telegram?: string;
+    instagram?: string;
+    twitter?: string;
+}
+
+interface DeleteUser {
+    password: string;
+}
+
 interface AuthState {
     user: User | null;
     loading: boolean;
-    error: string | null;
+    error: string | Record<string, string[]> | null;
 }
 
 const storedUser = localStorage.getItem("user");
@@ -42,6 +64,20 @@ const initialState: AuthState = {
     error: null,
 };
 
+const formatErrors = (errors: any): string | Record<string, string[]> => {
+    if (typeof errors === "string") {
+        return errors;
+    }
+
+    if (typeof errors === "object" && errors !== null) {
+        if (errors.detail) {
+            return errors.detail;
+        }
+        return errors;
+    }
+    return "An unknown error occured.";
+};
+
 export const registerUser = createAsyncThunk(
     "auth/register",
     async (userData: RegisterUser, { rejectWithValue }) => {
@@ -49,9 +85,10 @@ export const registerUser = createAsyncThunk(
             const response = await axios.post(`${MAIN_URL}/sign-up/`, userData);
             return response.data;
         } catch (err: any) {
-            return rejectWithValue(
-                err.response.data.detail || "Registration failed"
-            );
+            if (err.response?.data) {
+                return rejectWithValue(formatErrors(err.response.data));
+            }
+            return rejectWithValue("Registation failed.");
         }
     }
 );
@@ -63,7 +100,10 @@ export const loginUser = createAsyncThunk(
             const response = await axios.post(`${MAIN_URL}/login/`, userData);
             return response.data;
         } catch (err: any) {
-            return rejectWithValue(err.response.data.detail || "Login failed");
+            if (err.response?.data) {
+                return rejectWithValue(formatErrors(err.response.data));
+            }
+            return rejectWithValue("Login failed.");
         }
     }
 );
@@ -73,13 +113,77 @@ export const fetchCurrentUser = createAsyncThunk(
     async (_, { rejectWithValue, getState }) => {
         const state: any = getState();
         const token = state.auth.user?.access;
+        if (!token) {
+            return rejectWithValue("No authentication token found.");
+        }
         try {
             const response = await axios.get(`${MAIN_URL}/user-management/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
         } catch (err: any) {
-            return rejectWithValue("Failed to fetch user");
+            if (err.response?.data) {
+                return rejectWithValue(formatErrors(err.response.data));
+            }
+            return rejectWithValue("Failed to fetch user.");
+        }
+    }
+);
+
+export const updateUser = createAsyncThunk(
+    "auth/updateUser",
+    async (userData: UpdateUserData, { rejectWithValue, getState }) => {
+        const state: any = getState();
+        const token = state.auth.user?.access;
+        if (!token) {
+            return rejectWithValue("No authentication token found.");
+        }
+        try {
+            const formData = new FormData();
+            Object.entries(userData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    formData.append(key, value);
+                }
+            });
+            const response = await axios.put(
+                `${MAIN_URL}/user-management/`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+            return response.data;
+        } catch (err: any) {
+            if (err.response?.data) {
+                return rejectWithValue(formatErrors(err.response.data));
+            }
+            return rejectWithValue("Failed to update user.");
+        }
+    }
+);
+
+export const deleteUser = createAsyncThunk(
+    "auth/deleteUser",
+    async (data: DeleteUser, { rejectWithValue, getState }) => {
+        const state: any = getState();
+        const token = state.auth.user?.access;
+        if (!token) {
+            return rejectWithValue("No authentication token found.");
+        }
+        try {
+            const response = await axios.delete(
+                `${MAIN_URL}/user-management/`,
+                { headers: { Authorization: `Bearer ${token}` }, data: data }
+            );
+            return response.data;
+        } catch (err: any) {
+            if (err.response?.data) {
+                return rejectWithValue(formatErrors(err.response.data));
+            }
+            return rejectWithValue("Failed to delete account.");
         }
     }
 );
@@ -95,6 +199,9 @@ const authSlice = createSlice({
             state.loading = false;
             localStorage.removeItem("user");
         },
+        clearError: (state) => {
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -107,8 +214,9 @@ const authSlice = createSlice({
             })
             .addCase(registerUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error =
-                    (action.payload as string) || "Failed to register user.";
+                state.error = action.payload as
+                    | string
+                    | Record<string, string[]>;
             })
 
             // Login
@@ -116,13 +224,21 @@ const authSlice = createSlice({
                 state.loading = true;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
-                (state.loading = false), (state.user = action.payload);
-                localStorage.setItem("user", JSON.stringify(action.payload));
+                state.loading = false;
+                const userData = {
+                    ...action.payload,
+                    access: action.payload.token || action.payload.access,
+                    refresh: action.payload.refresh,
+                };
+
+                state.user = userData;
+                localStorage.setItem("user", JSON.stringify(userData));
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error =
-                    (action.payload as string) || "Failed to login user.";
+                state.error = action.payload as
+                    | string
+                    | Record<string, string[]>;
             })
 
             // Fetch current user
@@ -131,15 +247,66 @@ const authSlice = createSlice({
             })
             .addCase(fetchCurrentUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.user = action.payload;
+                const tokens = {
+                    access: state.user?.access,
+                    refresh: state.user?.refresh,
+                };
+                state.user = {
+                    ...action.payload,
+                    access: tokens.access,
+                    refresh: tokens.refresh,
+                };
+                localStorage.setItem("user", JSON.stringify(state.user));
             })
             .addCase(fetchCurrentUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error =
-                    (action.payload as string) || "Failed to fetch user.";
+                state.error = action.payload as
+                    | string
+                    | Record<string, string[]>;
+            })
+
+            // Update user
+            .addCase(updateUser.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(updateUser.fulfilled, (state, action) => {
+                state.loading = false;
+                const tokens = {
+                    access: state.user?.access,
+                    refresh: state.user?.refresh,
+                };
+                state.user = {
+                    ...action.payload,
+                    access: action.payload.token || tokens.access,
+                    refresh: tokens.refresh,
+                };
+                localStorage.setItem("user", JSON.stringify(state.user));
+            })
+            .addCase(updateUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as
+                    | string
+                    | Record<string, string[]>;
+            })
+
+            // Delete user
+            .addCase(deleteUser.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(deleteUser.fulfilled, (state) => {
+                state.loading = false;
+                state.user = null;
+                state.error = null;
+                localStorage.removeItem("user");
+            })
+            .addCase(deleteUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as
+                    | string
+                    | Record<string, string[]>;
             });
     },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;
