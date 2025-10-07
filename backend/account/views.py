@@ -56,7 +56,8 @@ class UserManagement(APIView):
         """
         try:
             user = request.user
-            serializer = UserSerializer(user, many=False)
+            serializer = UserSerializer(
+                user, many=False, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'detail': 'Failed to retrieve profile.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

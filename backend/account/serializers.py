@@ -173,7 +173,8 @@ class DeleteAccountSerializer(serializers.Serializer):
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        serializer = UserSerializerRefreshToken(self.user).data
+        serializer = UserSerializerRefreshToken(
+            self.user, context={'request': self.context.get('request')}).data
         for k, v in serializer.items():
             data[k] = v
         return data
