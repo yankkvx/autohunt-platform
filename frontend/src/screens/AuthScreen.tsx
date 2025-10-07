@@ -1,4 +1,11 @@
-import { Box, Button, TextField, Typography, MenuItem } from "@mui/material";
+import {
+    Box,
+    Button,
+    TextField,
+    Typography,
+    MenuItem,
+    Alert,
+} from "@mui/material";
 import { useFormik } from "formik";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -6,9 +13,10 @@ import {
     registerUser,
     type RegisterUser,
     type LoginUser,
+    clearError,
 } from "../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 
 const AuthScreen = () => {
@@ -16,6 +24,38 @@ const AuthScreen = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { loading, error } = useAppSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(clearError());
+    }, [isLogin, dispatch]);
+
+    const renderError = () => {
+        if (!error) return null;
+
+        if (typeof error === "string") {
+            return (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                    {error}
+                </Alert>
+            );
+        }
+
+        if (typeof error === "object") {
+            return (
+                <Box sx={{ mt: 2 }}>
+                    {Object.entries(error).map(([field, messages]) => (
+                        <Alert key={field} severity="error" sx={{ mb: 1 }}>
+                            <strong>{field}</strong>{" "}
+                            {Array.isArray(messages)
+                                ? messages.join(" ")
+                                : messages}
+                        </Alert>
+                    ))}
+                </Box>
+            );
+        }
+        return null;
+    };
 
     const loginFormik = useFormik<LoginUser>({
         initialValues: { email: "", password: "" },
@@ -46,6 +86,7 @@ const AuthScreen = () => {
             phone_number: "",
             company_name: "",
             password: "",
+            password_confirm: "",
         },
         validate: (values) => {
             const errors: any = {};
@@ -58,6 +99,9 @@ const AuthScreen = () => {
                 errors.password = "Password is required.";
             } else if (values.password.length < 8) {
                 errors.password = "Minimum 8 characters.";
+            }
+            if (values.password !== values.password_confirm) {
+                errors.password_confirm = "Password to not match.";
             }
             if (!values.first_name) errors.first_name = "Required.";
             if (!values.last_name) errors.last_name = "Required.";
@@ -152,16 +196,7 @@ const AuthScreen = () => {
                         >
                             Login
                         </Button>
-                        {error && (
-                            <Typography
-                                color="error"
-                                variant="body2"
-                                align="center"
-                                mt={1}
-                            >
-                                {error}
-                            </Typography>
-                        )}
+                        {renderError()}
                     </Box>
                 )}
 
@@ -308,6 +343,25 @@ const AuthScreen = () => {
                             }
                         />
 
+                        <TextField
+                            fullWidth
+                            label="Confirm Password"
+                            name="password_confirm"
+                            type="password"
+                            margin="normal"
+                            value={registerFormik.values.password_confirm}
+                            onChange={registerFormik.handleChange}
+                            onBlur={registerFormik.handleBlur}
+                            error={
+                                !!registerFormik.touched.password_confirm &&
+                                !!registerFormik.errors.password_confirm
+                            }
+                            helperText={
+                                registerFormik.touched.password_confirm &&
+                                registerFormik.errors.password_confirm
+                            }
+                        />
+
                         <Button
                             fullWidth
                             type="submit"
@@ -317,16 +371,7 @@ const AuthScreen = () => {
                         >
                             Register
                         </Button>
-                        {error && (
-                            <Typography
-                                color="error"
-                                variant="body2"
-                                align="center"
-                                mt={1}
-                            >
-                                {error}
-                            </Typography>
-                        )}
+                        {renderError()}
                     </Box>
                 )}
             </Box>
