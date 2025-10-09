@@ -78,6 +78,37 @@ export interface CarDetailes extends Car {
     interior_material?: NestedField;
 }
 
+export interface CreateAdData {
+    title: string;
+    description: string;
+    brand_id: number;
+    model_id: number;
+    year: number;
+    mileage?: number;
+    power?: number | null;
+    capacity?: number | null;
+    battery_power?: number | null;
+    battery_capacity?: number;
+    vin?: string | null;
+    location: string | null;
+    price: number;
+    warranty?: boolean;
+    airbag?: boolean;
+    air_conditioning?: boolean;
+    number_of_seats?: number | null;
+    number_of_doors?: number | null;
+    owner_count?: number | null;
+    is_first_owner?: boolean;
+    condition?: string;
+    body_type_id?: number | null;
+    fuel_type_id?: number | null;
+    drive_type_id?: number | null;
+    transmission_id?: number | null;
+    exterior_color_id?: number | null;
+    interior_color_id?: number | null;
+    interior_material_id?: number | null;
+}
+
 interface AdsState {
     cars: Car[];
     count: number;
@@ -87,6 +118,12 @@ interface AdsState {
     loading: boolean;
     error: string | null;
     currentAd: CarDetailes | null;
+    creating: boolean;
+    createError: string | null;
+    createSuccess: boolean;
+    createdAd: CarDetailes | null;
+    uploadingImages: boolean;
+    uploadError: string | null;
 }
 
 const initialState: AdsState = {
@@ -98,6 +135,12 @@ const initialState: AdsState = {
     loading: false,
     error: null,
     currentAd: null,
+    creating: false,
+    createError: null,
+    createSuccess: false,
+    createdAd: null,
+    uploadingImages: false,
+    uploadError: null,
 };
 
 export const fetchAds = createAsyncThunk(
@@ -210,10 +253,85 @@ export const fetchAdById = createAsyncThunk(
     }
 );
 
+export const createAd = createAsyncThunk(
+    "/ads/createAd/",
+    async (adData: CreateAdData, { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+
+            const response = await axios.post(`${MAIN_URL}/ads/`, adData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.data) {
+                return rejectWithValue(error.response.data);
+            }
+            return rejectWithValue({ message: "Failed to create ad." });
+        }
+    }
+);
+
+export const uploadAdImages = createAsyncThunk(
+    "ads/uploadImages",
+    async (
+        { adId, images }: { adId: number; images: File[] },
+        { getState, rejectWithValue }
+    ) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+
+            const formData = new FormData();
+
+            images.forEach((image) => {
+                formData.append("images", image);
+            });
+
+            const response = await axios.post(
+                `${MAIN_URL}/ads/${adId}/add_image/`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.data) {
+                return rejectWithValue(error.response.data);
+            }
+            return rejectWithValue({ message: "Failed to upload images." });
+        }
+    }
+);
+
 const adsSlice = createSlice({
     name: "ads",
     initialState,
-    reducers: {},
+    reducers: {
+        resetCreateState: (state) => {
+            state.creating = false;
+            state.createError = null;
+            state.createSuccess = false;
+            state.createdAd = null;
+            (state.uploadingImages = false), (state.uploadError = null);
+        },
+        clearCreateError: (state) => {
+            state.createError = null;
+            state.uploadError = null;
+        },
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchAds.pending, (state) => {
@@ -246,8 +364,50 @@ const adsSlice = createSlice({
             .addCase(fetchAdById.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || "Failed to fetch ad.";
+            })
+
+            // createAd
+            .addCase(createAd.pending, (state) => {
+                state.creating = true;
+                state.createError = null;
+                state.createSuccess = false;
+            })
+            .addCase(
+                createAd.fulfilled,
+                (state, action: PayloadAction<CarDetailes>) => {
+                    state.creating = false;
+                    state.createSuccess = true;
+                    state.createdAd = action.payload;
+                }
+            )
+            .addCase(createAd.rejected, (state, action) => {
+                state.creating = false;
+                state.createSuccess = false;
+                const payload = action.payload as any;
+                state.createError =
+                    payload?.detail ||
+                    payload?.message ||
+                    "Failed to create ad";
+            })
+
+            // upload images
+            .addCase(uploadAdImages.pending, (state) => {
+                state.uploadingImages = true;
+                state.uploadError = null;
+            })
+            .addCase(uploadAdImages.fulfilled, (state) => {
+                state.uploadingImages = false;
+            })
+            .addCase(uploadAdImages.rejected, (state, action) => {
+                state.uploadingImages = false;
+                const payload = action.payload as any;
+                state.uploadError =
+                    payload?.detail ||
+                    payload?.message ||
+                    "Failed to upload images";
             });
     },
 });
 
+export const { resetCreateState, clearCreateError } = adsSlice.actions;
 export default adsSlice.reducer;
