@@ -88,10 +88,10 @@ export interface CreateAdData {
     power?: number | null;
     capacity?: number | null;
     battery_power?: number | null;
-    battery_capacity?: number;
+    battery_capacity?: number | null;
     vin?: string | null;
     location: string | null;
-    price: number;
+    price: number | string;
     warranty?: boolean;
     airbag?: boolean;
     air_conditioning?: boolean;
