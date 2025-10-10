@@ -201,7 +201,7 @@ class AdminToggleActive(APIView):
             user.is_active = not user.is_active
             user.save(update_fields=['is_active'])
 
-            return Response({'detail': f'User {'unbanned' if user.is_active else 'banned'}.',
+            return Response({'detail': f"User {'unbanned' if user.is_active else 'banned'}.",
                              'is_active': user.is_active}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'detail': 'Failed to update user status.'},
