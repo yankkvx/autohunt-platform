@@ -18,6 +18,37 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
+import * as Yup from "yup";
+
+const loginValidationSchema = Yup.object({
+    email: Yup.string()
+        .email("Invalid email address.")
+        .required("Email is required."),
+    password: Yup.string().required("Password is required."),
+});
+
+const registerValidationSchema = Yup.object({
+    account_type: Yup.string()
+        .oneOf(["private", "company"])
+        .required("Account Type is required."),
+    email: Yup.string()
+        .email("Invalid email address.")
+        .required("Email is required."),
+    first_name: Yup.string().required("First name is required."),
+    last_name: Yup.string().required("Last name is required."),
+    phone_number: Yup.string().required("Phone number is required."),
+    company_name: Yup.string().when("account_type", {
+        is: "company",
+        then: (schema) => schema.required("Comapny name is required."),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    password: Yup.string()
+        .min(8, "Password must be at least 8 characters.")
+        .required("Password is required."),
+    password_confirm: Yup.string()
+        .oneOf([Yup.ref("password")], "Passwords do not match.")
+        .required("Please confirm your password."),
+});
 
 const AuthScreen = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -59,16 +90,7 @@ const AuthScreen = () => {
 
     const loginFormik = useFormik<LoginUser>({
         initialValues: { email: "", password: "" },
-        validate: (values) => {
-            const errors: Partial<typeof values> = {};
-            if (!values.email) {
-                errors.email = "This field is required";
-            }
-            if (!values.password) {
-                errors.password = "This field is required";
-            }
-            return errors;
-        },
+        validationSchema: loginValidationSchema,
         onSubmit: async (values) => {
             const result = await dispatch(loginUser(values));
             if (loginUser.fulfilled.match(result)) {
@@ -88,29 +110,7 @@ const AuthScreen = () => {
             password: "",
             password_confirm: "",
         },
-        validate: (values) => {
-            const errors: any = {};
-            if (!values.email) {
-                errors.email = "Email is required.";
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-                errors.email = "Invalid email address.";
-            }
-            if (!values.password) {
-                errors.password = "Password is required.";
-            } else if (values.password.length < 8) {
-                errors.password = "Minimum 8 characters.";
-            }
-            if (values.password !== values.password_confirm) {
-                errors.password_confirm = "Password to not match.";
-            }
-            if (!values.first_name) errors.first_name = "Required.";
-            if (!values.last_name) errors.last_name = "Required.";
-            if (!values.phone_number) errors.phone_number = "Required.";
-            if (values.account_type === "company" && !values.company_name) {
-                errors.company_name = "Company name is required.";
-            }
-            return errors;
-        },
+        validationSchema: registerValidationSchema,
         onSubmit: async (values) => {
             const result = await dispatch(registerUser(values));
             if (registerUser.fulfilled.match(result)) {
