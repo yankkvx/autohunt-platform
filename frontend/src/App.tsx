@@ -7,6 +7,7 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthScreen from "./screens/AuthScreen";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import ProfileScreen from "./screens/ProfileScreen";
+import CreateAdScreen from "./screens/CreateAdScreen";
 
 function App() {
     return (
@@ -23,6 +24,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <ProfileScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/post-ad"
+                            element={
+                                <ProtectedRoute>
+                                    <CreateAdScreen />
                                 </ProtectedRoute>
                             }
                         />
