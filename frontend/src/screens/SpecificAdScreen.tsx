@@ -1,7 +1,7 @@
-import { Container, Box, Grid } from "@mui/material";
+import { Container, Box, Grid, CircularProgress, Alert } from "@mui/material";
 import MainLayout from "../layouts/MainLayout";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { fetchAdById } from "../store/slices/adsSlice";
 import { useParams } from "react-router-dom";
 import AdDetails from "../components/SpecificAdScreen/AdDetails";
@@ -13,6 +13,7 @@ const SpecificAdScreen = () => {
     const adId = Number(id);
     const dispatch = useAppDispatch();
     const { currentAd, loading, error } = useAppSelector((state) => state.ads);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         if (!isNaN(adId)) {
@@ -20,9 +21,61 @@ const SpecificAdScreen = () => {
         }
     }, [adId, dispatch]);
 
+    useEffect(() => {
+        if (
+            currentAd &&
+            (!currentAd.images || currentAd.images.length === 0) &&
+            retryCount < 3
+        ) {
+            const timer = setTimeout(() => {
+                dispatch(fetchAdById(adId));
+                setRetryCount((prev) => prev + 1);
+            }, 2000);
+            return () => clearInterval(timer);
+        }
+    }, [currentAd, adId, dispatch, retryCount]);
+
+    if (loading) {
+        return (
+            <MainLayout>
+                <Container maxWidth="lg" sx={{ pt: 2, pb: 4 }}>
+                    <Box
+                        sx={{
+                            height: "60vh",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <CircularProgress size={60} />
+                    </Box>
+                </Container>
+            </MainLayout>
+        );
+    }
+
+    if (error) {
+        return (
+            <MainLayout>
+                <Container maxWidth="lg" sx={{ pt: 2, pb: 4 }}>
+                    <Alert severity="error" sx={{ mt: 3 }}>
+                        {error}
+                    </Alert>
+                </Container>
+            </MainLayout>
+        );
+    }
+
     return (
         <MainLayout>
             <Container maxWidth="lg" sx={{ pt: 2, pb: 4 }}>
+                {(!currentAd?.images || currentAd?.images.length === 0) &&
+                    retryCount < 3 && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                            Images are being processed... This may take a few
+                            moments.
+                        </Alert>
+                    )}
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 8 }} sx={{ mt: 3 }}>
                         {currentAd ? (

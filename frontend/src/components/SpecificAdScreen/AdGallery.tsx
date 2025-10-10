@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Box, Dialog, IconButton } from "@mui/material";
+import { Box, Dialog, IconButton, Typography } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
-
+import ImageIcon from "@mui/icons-material/Image";
 import type { CarImage } from "../../store/slices/adsSlice";
 
 interface AdGalleryProps {
@@ -13,6 +13,31 @@ interface AdGalleryProps {
 const AdGallery = ({ images }: AdGalleryProps) => {
     const [selectedId, setSelectedId] = useState(0);
     const [openWindow, setOpenWindow] = useState(false);
+
+    if (!images || images.length === 0) {
+        return (
+            <Box>
+                <Box
+                    sx={{
+                        mb: 0.5,
+                        height: 400,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: "background.paper",
+                        boxShadow: 2,
+                        borderRadius: 3,
+                        overflow: "hidden",
+                    }}
+                >
+                    <ImageIcon sx={{ fontSize: 80, color: "text.disabled" }} />
+                    <Typography color="text.secondary" sx={{ mt: 2 }}>
+                        No images available.
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    }
 
     const handleOpen = (id: number) => {
         setSelectedId(id);
