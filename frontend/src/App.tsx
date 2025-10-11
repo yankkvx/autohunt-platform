@@ -8,6 +8,7 @@ import AuthScreen from "./screens/AuthScreen";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import ProfileScreen from "./screens/ProfileScreen";
 import CreateAdScreen from "./screens/CreateAdScreen";
+import EditAdScreen from "./screens/EditAdScreen";
 
 function App() {
     return (
@@ -32,6 +33,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <CreateAdScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/ads/:id/edit"
+                            element={
+                                <ProtectedRoute>
+                                    <EditAdScreen />
                                 </ProtectedRoute>
                             }
                         />
