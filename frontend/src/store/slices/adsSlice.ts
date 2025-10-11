@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import axios from "axios";
 import { MAIN_URL } from "../../api-config";
+import { bool } from "yup";
 
 interface NestedField {
     id: number;
@@ -61,6 +62,7 @@ export interface CarDetailes extends Car {
     battery_power?: number;
     battery_capacity?: number;
     vin?: string;
+    location?: string;
     warranty?: boolean;
     airbag?: boolean;
     air_conditioning?: boolean;
@@ -109,6 +111,8 @@ export interface CreateAdData {
     interior_material_id?: number | null;
 }
 
+export interface UpdateAdData extends CreateAdData {}
+
 interface AdsState {
     cars: Car[];
     count: number;
@@ -124,6 +128,11 @@ interface AdsState {
     createdAd: CarDetailes | null;
     uploadingImages: boolean;
     uploadError: string | null;
+    updating: boolean;
+    updateError: string | null;
+    updateSuccess: boolean;
+    deletingImage: boolean;
+    deletingImageError: string | null;
 }
 
 const initialState: AdsState = {
@@ -141,6 +150,11 @@ const initialState: AdsState = {
     createdAd: null,
     uploadingImages: false,
     uploadError: null,
+    updating: false,
+    updateError: null,
+    updateSuccess: false,
+    deletingImage: false,
+    deletingImageError: null,
 };
 
 export const fetchAds = createAsyncThunk(
@@ -316,6 +330,69 @@ export const uploadAdImages = createAsyncThunk(
     }
 );
 
+export const updateAd = createAsyncThunk(
+    "/ads/updateAd",
+    async (
+        { adId, adData }: { adId: number; adData: UpdateAdData },
+        { getState, rejectWithValue }
+    ) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+
+            const response = await axios.put(
+                `${MAIN_URL}/ads/${adId}/`,
+                adData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.data) {
+                return rejectWithValue(error.response.data);
+            }
+            return rejectWithValue({ message: "Failed to update ad." });
+        }
+    }
+);
+
+export const deleteAdImage = createAsyncThunk(
+    "ads/deleteImage",
+    async (
+        { adId, imageId }: { adId: number; imageId: number },
+        { getState, rejectWithValue }
+    ) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+
+            const response = await axios.delete(
+                `${MAIN_URL}/ads/${adId}/remove_image/`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    data: { image_id: imageId },
+                }
+            );
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.data) {
+                return rejectWithValue(error.response.data);
+            }
+            return rejectWithValue({ message: "Failed to delete image." });
+        }
+    }
+);
+
 const adsSlice = createSlice({
     name: "ads",
     initialState,
@@ -329,6 +406,13 @@ const adsSlice = createSlice({
         },
         clearCreateError: (state) => {
             state.createError = null;
+            state.uploadError = null;
+        },
+        resetUpdateState: (state) => {
+            state.updating = false;
+            state.updateError = null;
+            state.updateSuccess = false;
+            state.uploadingImages = false;
             state.uploadError = null;
         },
     },
@@ -405,9 +489,51 @@ const adsSlice = createSlice({
                     payload?.detail ||
                     payload?.message ||
                     "Failed to upload images";
+            })
+
+            // Update ad
+            .addCase(updateAd.pending, (state) => {
+                state.updating = true;
+                state.updateError = null;
+                state.updateSuccess = false;
+            })
+            .addCase(
+                updateAd.fulfilled,
+                (state, action: PayloadAction<CarDetailes>) => {
+                    state.updating = false;
+                    state.updateSuccess = true;
+                    state.currentAd = action.payload;
+                }
+            )
+            .addCase(updateAd.rejected, (state, action) => {
+                state.updating = false;
+                state.updateSuccess = false;
+                const payload = action.payload as any;
+                state.updateError =
+                    payload?.detail ||
+                    payload?.message ||
+                    "Failed to update ad.";
+            })
+
+            // Delete image
+            .addCase(deleteAdImage.pending, (state) => {
+                state.deletingImage = true;
+                state.deletingImageError = null;
+            })
+            .addCase(deleteAdImage.fulfilled, (state) => {
+                state.deletingImage = false;
+            })
+            .addCase(deleteAdImage.rejected, (state, action) => {
+                state.deletingImage = false;
+                const payload = action.payload as any;
+                state.deletingImageError =
+                    payload?.detail ||
+                    payload?.message ||
+                    "Failed to delete image.";
             });
     },
 });
 
-export const { resetCreateState, clearCreateError } = adsSlice.actions;
+export const { resetCreateState, resetUpdateState, clearCreateError } =
+    adsSlice.actions;
 export default adsSlice.reducer;
