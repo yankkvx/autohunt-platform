@@ -1,8 +1,9 @@
 import { Box, Typography, Avatar, Button, Link } from "@mui/material";
-import { Link as LinkRouter } from "react-router-dom";
+import { Link as LinkRouter, useNavigate } from "react-router-dom";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import type { CarDetailes, UserDetail } from "../../store/slices/adsSlice";
+import { useAppSelector } from "../../store/hooks";
 
 interface SellerInfoProps {
     ad: CarDetailes;
@@ -10,6 +11,14 @@ interface SellerInfoProps {
 }
 
 const SellerInfo = ({ ad, user }: SellerInfoProps) => {
+    const navigate = useNavigate();
+    const { user: authUser } = useAppSelector((state) => state.auth);
+
+    const isOwner =
+        authUser?.id &&
+        ad?.user?.id &&
+        Number(authUser.id) === Number(ad.user.id);
+
     return (
         <Box
             sx={{
@@ -81,12 +90,23 @@ const SellerInfo = ({ ad, user }: SellerInfoProps) => {
                     </Link>
                 </Typography>
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", mt: 2 }}>
-                <Button variant="contained">Send message</Button>
-                <Button variant="contained" color="info" sx={{ mt: 1 }}>
-                    Add to favourites
-                </Button>
-            </Box>
+            {isOwner ? (
+                <Box sx={{ display: "flex", flexDirection: "column", mt: 2 }}>
+                    <Button
+                        variant="contained"
+                        onClick={() => navigate(`/ads/${ad.id}/edit`)}
+                    >
+                        Edit
+                    </Button>
+                </Box>
+            ) : (
+                <Box sx={{ display: "flex", flexDirection: "column", mt: 2 }}>
+                    <Button variant="contained">Send message</Button>
+                    <Button variant="contained" color="info" sx={{ mt: 1 }}>
+                        Add to favourites
+                    </Button>
+                </Box>
+            )}
         </Box>
     );
 };
