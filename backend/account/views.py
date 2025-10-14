@@ -111,6 +111,25 @@ class UserManagement(APIView):
             return Response({'detail': 'Failed to delete account.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class PublicProfie(APIView):
+    """
+    API ednpoint for getting public information about user.
+    Available to everyone (authorized and unauthorized)
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        try:
+            user = get_object_or_404(User, id=pk)
+            if not user.is_active:
+                return Response({'detail': 'This profile is not available.'}, status=status.HTTP_404_NOT_FOUND)
+            serializer = UserSerializer(
+                user, many=False, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Profile upload failed'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class AdminUserManagement(APIView):
     """
     Admin API for managing users: retieve, update, delete

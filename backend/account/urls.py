@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MyTokenObtainPairView, RegisterView, UserManagement, AdminUserManagement, AdminToggleActive
+from .views import MyTokenObtainPairView, RegisterView, UserManagement, AdminUserManagement, AdminToggleActive, PublicProfie
 
 urlpatterns = [
     path('login/', MyTokenObtainPairView.as_view(), name='token-obtain-pair'),
@@ -9,5 +9,6 @@ urlpatterns = [
     path('users/<int:pk>/', AdminUserManagement.as_view(),
          name='admin-user-detail'),
     path('users/<int:pk>/toggle-active/',
-         AdminToggleActive.as_view(), name='admin-toggle-active')
+         AdminToggleActive.as_view(), name='admin-toggle-active'),
+    path('profile/<int:pk>/', PublicProfie.as_view(), name='public-profile')
 ]
