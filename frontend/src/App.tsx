@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/routes/ProtectedRoute";
 import ProfileScreen from "./screens/ProfileScreen";
 import CreateAdScreen from "./screens/CreateAdScreen";
 import EditAdScreen from "./screens/EditAdScreen";
+import PublicProfile from "./screens/PublicProfile";
 
 function App() {
     return (
@@ -44,6 +45,7 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route path="/users/:id" element={<PublicProfile />} />
                     </Routes>
                 </ColorToggle>
             </BrowserRouter>
