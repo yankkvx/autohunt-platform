@@ -225,3 +225,21 @@ class AdminToggleActive(APIView):
         except Exception as e:
             return Response({'detail': 'Failed to update user status.'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminToggleStaff(APIView):
+    """Admin API endpoint for granting/reviking staff status"""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            user = get_object_or_404(User, id=pk)
+            if user.id == request.user.id:
+                return Response({'detail': 'You cannot change your own staff status.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.is_staff = not user.is_staff
+            user.save(update_fields=['is_staff'])
+
+            return Response({'detail': f"User {'granted' if user.is_staff else 'revoked'} staff status.", 'is_staff': user.is_staff}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Failed to update user staff status.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
