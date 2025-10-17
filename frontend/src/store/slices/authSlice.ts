@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { MAIN_URL } from "../../api-config";
 
-interface User {
+export interface User {
+    id: number;
     email: string;
     first_name: string;
     last_name: string;
@@ -18,7 +19,10 @@ interface User {
     twitter?: string;
     access?: string;
     refresh?: string;
+    is_active: boolean;
+    is_staff: boolean;
 }
+
 export interface RegisterUser {
     email: string;
     password: string;
@@ -129,7 +133,6 @@ export const fetchCurrentUser = createAsyncThunk(
         }
     }
 );
-
 export const updateUser = createAsyncThunk(
     "auth/updateUser",
     async (userData: UpdateUserData, { rejectWithValue, getState }) => {
