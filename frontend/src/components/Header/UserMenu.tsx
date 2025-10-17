@@ -11,6 +11,7 @@ import { useTheme } from "@mui/material/styles";
 import { Link as LinkRouter } from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Logout from "@mui/icons-material/Logout";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -67,7 +68,7 @@ const UserMenu = () => {
                         display: "flex",
                         gap: 1.5,
                         backgroundColor: theme.palette.action.hover,
-                        alignItems: 'center'
+                        alignItems: "center",
                     }}
                 >
                     <Avatar
@@ -109,6 +110,25 @@ const UserMenu = () => {
                     </Box>
                 </Box>
                 <Divider sx={{ my: 1 }} />
+                {user?.is_staff && (
+                    <MenuItem
+                        component={LinkRouter}
+                        to="/admin"
+                        sx={{
+                            gap: 2,
+                            fontWeight: "500",
+                            py: 1.5,
+                            px: 2,
+                            transition: "all 0.2s",
+                            "&:hover": {
+                                backgroundColor: theme.palette.action.hover,
+                                pl: 2.5,
+                            },
+                        }}
+                    >
+                        <AdminPanelSettingsIcon /> Admin
+                    </MenuItem>
+                )}
                 <MenuItem
                     component={LinkRouter}
                     to="/profile"
