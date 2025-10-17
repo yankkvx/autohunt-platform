@@ -10,6 +10,11 @@ import ProfileScreen from "./screens/ProfileScreen";
 import CreateAdScreen from "./screens/CreateAdScreen";
 import EditAdScreen from "./screens/EditAdScreen";
 import PublicProfile from "./screens/PublicProfile";
+import AdminRoute from "./components/routes/AdminRoute";
+import AdminDashboard from "./screens/Admin/AdminDashboard";
+import AdminUsers from "./screens/Admin/AdminUsers";
+import AdminAds from "./screens/Admin/AdminAds";
+import AdminCatalog from "./screens/Admin/AdminCatalog";
 
 function App() {
     return (
@@ -46,6 +51,38 @@ function App() {
                             }
                         />
                         <Route path="/users/:id" element={<PublicProfile />} />
+                        <Route
+                            path="/admin"
+                            element={
+                                <AdminRoute>
+                                    <AdminDashboard />
+                                </AdminRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/users"
+                            element={
+                                <AdminRoute>
+                                    <AdminUsers />
+                                </AdminRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/ads"
+                            element={
+                                <AdminRoute>
+                                    <AdminAds />
+                                </AdminRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/catalog"
+                            element={
+                                <AdminRoute>
+                                    <AdminCatalog />
+                                </AdminRoute>
+                            }
+                        />
                     </Routes>
                 </ColorToggle>
             </BrowserRouter>
