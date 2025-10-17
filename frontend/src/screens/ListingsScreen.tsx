@@ -8,7 +8,7 @@ import {
     Fade,
     Pagination,
 } from "@mui/material";
-import { Link as LinkRouter } from "react-router-dom";
+import { Link as LinkRouter, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import ListingFilters from "../components/ListingsScreen/ListingFilters";
@@ -19,11 +19,13 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const ListingsScreen = () => {
     const dispatch = useAppDispatch();
+    const location = useLocation();
     const { cars, loading, error, count, currentPage } = useAppSelector(
         (state) => state.ads
     );
     const [page, setPage] = useState(1);
-    const [filters, setFilters] = useState({});
+    const initialFilters = location.state?.filters || {};
+    const [filters, setFilters] = useState(initialFilters);
 
     const pageSize = 16;
     const totalPages = Math.ceil(count / pageSize);

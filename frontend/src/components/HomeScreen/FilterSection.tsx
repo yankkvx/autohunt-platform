@@ -7,6 +7,7 @@ import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
+import { useNavigate } from "react-router-dom";
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1950 + 1 }, (_, i) => {
@@ -48,6 +49,7 @@ const batteryCapacities = Array.from({ length: 20 }, (_, i) => {
 
 const FilterSection = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const {
         brands,
         models,
@@ -85,7 +87,7 @@ const FilterSection = () => {
         capacityTo: null,
         batteryPowerFrom: null,
         batteryPowerTo: null,
-        batteryCapacaityFrom: null,
+        batteryCapacityFrom: null,
         batteryCapacityTo: null,
     });
 
@@ -136,6 +138,10 @@ const FilterSection = () => {
         value: dt.id,
         label: dt.name,
     }));
+
+    const handleSearch = () => {
+        navigate("/ads", { state: { filters } });
+    };
 
     if (loading) return <p>Loading...</p>;
 
@@ -232,10 +238,15 @@ const FilterSection = () => {
                     <Grid component="div">
                         <Select
                             options={transmissionOptions}
-                            value={filters.transmission}
+                            value={filters.transmission?.map((t: string) =>
+                                transmissionOptions.find(
+                                    (opt: any) => opt.value === t
+                                )
+                            )}
                             onChange={(value) =>
-                                handleChange("transmission", value)
+                                handleMultiChange("transmission", value)
                             }
+                            isMulti
                             placeholder="Transmission"
                             styles={selectStyles}
                         />
@@ -431,11 +442,10 @@ const FilterSection = () => {
                             <Grid component="div">
                                 <Select
                                     options={bodyTypeOptions}
-                                    value={filters.bodyType.map(
-                                        (b: string) => ({
-                                            value: b,
-                                            label: b,
-                                        })
+                                    value={filters.bodyType?.map((b: string) =>
+                                        bodyTypeOptions.find(
+                                            (opt: any) => opt.value === b
+                                        )
                                     )}
                                     onChange={(value) =>
                                         handleMultiChange("bodyType", value)
@@ -451,9 +461,13 @@ const FilterSection = () => {
                             <Grid component="div">
                                 <Select
                                     options={driveTypeOptions}
-                                    value={filters.driveType}
+                                    value={filters.driveType?.map((d: string) =>
+                                        driveTypeOptions.find(
+                                            (opt: any) => opt.value === d
+                                        )
+                                    )}
                                     onChange={(value) =>
-                                        handleChange("driveType", value)
+                                        handleMultiChange("driveType", value)
                                     }
                                     placeholder="Drive type"
                                     styles={selectStyles}
@@ -492,6 +506,7 @@ const FilterSection = () => {
                             textTransform: "none",
                             boxShadow: "none",
                         }}
+                        onClick={handleSearch}
                     >
                         <SearchIcon />
                         Search
