@@ -43,7 +43,7 @@ export const fetchAllUsers = createAsyncThunk(
         filters: {
             search?: string;
             account_type?: string;
-            is_active?: string;
+            is_active?: boolean;
         } = {},
         { getState, rejectWithValue }
     ) => {
@@ -159,9 +159,28 @@ export const createCatalogItem = createAsyncThunk(
             );
             return { type, item: response.data };
         } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data || "Failed to create item."
-            );
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                if (errorData.name) {
+                    return rejectWithValue(
+                        Array.isArray(errorData.name)
+                            ? errorData.name[0]
+                            : errorData.name
+                    );
+                }
+
+                if (errorData.detail) {
+                    return rejectWithValue(errorData.detail);
+                }
+
+                if (typeof errorData === "object") {
+                    const firstError = Object.values(errorData)[0];
+                    return rejectWithValue(
+                        Array.isArray(firstError) ? firstError[0] : firstError
+                    );
+                }
+            }
+            return rejectWithValue("Failed to create item.");
         }
     }
 );
@@ -185,9 +204,28 @@ export const editCatalogItem = createAsyncThunk(
             );
             return { type, item: response.data };
         } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data || "Failed to update item."
-            );
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                if (errorData.name) {
+                    return rejectWithValue(
+                        Array.isArray(errorData.name)
+                            ? errorData.name[0]
+                            : errorData.name
+                    );
+                }
+
+                if (errorData.detail) {
+                    return rejectWithValue(errorData.detail);
+                }
+
+                if (typeof errorData === "object") {
+                    const firstError = Object.values(errorData)[0];
+                    return rejectWithValue(
+                        Array.isArray(firstError) ? firstError[0] : firstError
+                    );
+                }
+            }
+            return rejectWithValue("Failed to create item.");
         }
     }
 );
@@ -317,9 +355,11 @@ const adminSlice = createSlice({
             // Catalog actions
             .addCase(createCatalogItem.pending, (state) => {
                 state.catalogLoading = true;
+                state.catalogError = null;
             })
             .addCase(createCatalogItem.fulfilled, (state) => {
                 state.catalogLoading = false;
+                state.catalogError = null;
             })
             .addCase(createCatalogItem.rejected, (state, action) => {
                 state.catalogLoading = false;
@@ -328,9 +368,11 @@ const adminSlice = createSlice({
 
             .addCase(editCatalogItem.pending, (state) => {
                 state.catalogLoading = true;
+                state.catalogError = null;
             })
             .addCase(editCatalogItem.fulfilled, (state) => {
                 state.catalogLoading = false;
+                state.catalogError = null;
             })
             .addCase(editCatalogItem.rejected, (state, action) => {
                 state.catalogLoading = false;
@@ -339,9 +381,11 @@ const adminSlice = createSlice({
 
             .addCase(deleteCatalogItem.pending, (state) => {
                 state.catalogLoading = true;
+                state.catalogError = null;
             })
             .addCase(deleteCatalogItem.fulfilled, (state) => {
                 state.catalogLoading = false;
+                state.catalogError = null;
             })
             .addCase(deleteCatalogItem.rejected, (state, action) => {
                 state.catalogLoading = false;
