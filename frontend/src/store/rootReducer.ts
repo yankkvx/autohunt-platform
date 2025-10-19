@@ -4,6 +4,7 @@ import latestCarReducer from "./slices/latestCarSlice";
 import adsReducer from "./slices/adsSlice";
 import authReducer from "./slices/authSlice";
 import adminReducer from "./slices/adminSlice";
+import favouritesReduces from "./slices/favouriteSlice";
 
 export const rootReducer = combineReducers({
     catalog: catalogReducer,
@@ -11,6 +12,7 @@ export const rootReducer = combineReducers({
     ads: adsReducer,
     auth: authReducer,
     admin: adminReducer,
+    favourites: favouritesReduces,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
