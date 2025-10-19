@@ -3,7 +3,13 @@ import { Link as LinkRouter, useNavigate } from "react-router-dom";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import type { CarDetailes, UserDetail } from "../../store/slices/adsSlice";
-import { useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+    addFavourite,
+    removeFavourite,
+    fetchFavourites,
+} from "../../store/slices/favouriteSlice";
+import { useEffect } from "react";
 
 interface SellerInfoProps {
     ad: CarDetailes;
@@ -11,13 +17,31 @@ interface SellerInfoProps {
 }
 
 const SellerInfo = ({ ad, user }: SellerInfoProps) => {
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { user: authUser } = useAppSelector((state) => state.auth);
+    const { favourites, adding, removing } = useAppSelector(
+        (state) => state.favourites
+    );
 
     const isOwner =
         authUser?.id &&
         ad?.user?.id &&
         Number(authUser.id) === Number(ad.user.id);
+
+    const isFavourite = favourites.some((fav) => fav.ad.id === ad.id);
+
+    useEffect(() => {
+        dispatch(fetchFavourites());
+    }, [dispatch]);
+
+    const handleFavouriteClick = () => {
+        if (isFavourite) {
+            dispatch(removeFavourite(ad.id));
+        } else {
+            dispatch(addFavourite(ad.id));
+        }
+    };
 
     return (
         <Box
@@ -102,8 +126,16 @@ const SellerInfo = ({ ad, user }: SellerInfoProps) => {
             ) : (
                 <Box sx={{ display: "flex", flexDirection: "column", mt: 2 }}>
                     <Button variant="contained">Send message</Button>
-                    <Button variant="contained" color="info" sx={{ mt: 1 }}>
-                        Add to favourites
+                    <Button
+                        variant="contained"
+                        color="info"
+                        sx={{ mt: 1 }}
+                        onClick={handleFavouriteClick}
+                        disabled={adding || removing}
+                    >
+                        {isFavourite
+                            ? "Remove from favourites"
+                            : "Add to favourites"}
                     </Button>
                 </Box>
             )}
