@@ -15,6 +15,7 @@ import AdminDashboard from "./screens/Admin/AdminDashboard";
 import AdminUsers from "./screens/Admin/AdminUsers";
 import AdminAds from "./screens/Admin/AdminAds";
 import AdminCatalog from "./screens/Admin/AdminCatalog";
+import FavouritesScreen from "./screens/FavouritesScreen";
 
 function App() {
     return (
@@ -81,6 +82,14 @@ function App() {
                                 <AdminRoute>
                                     <AdminCatalog />
                                 </AdminRoute>
+                            }
+                        />
+                        <Route
+                            path="/favourites"
+                            element={
+                                <ProtectedRoute>
+                                    <FavouritesScreen />
+                                </ProtectedRoute>
                             }
                         />
                     </Routes>
