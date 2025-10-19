@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.shortcuts import get_object_or_404
-from .models import Ad, AdImage
-from .serializers import AdSerializer, AdListSerializer, AdImageSerializer
+from .models import Ad, AdImage, Favourite
+from .serializers import AdSerializer, AdListSerializer, AdImageSerializer, FavouriteSerializer
 from .filters import AdFilter
 from .utils import validate_image_file
 from .tasks import process_image_watermark
@@ -133,3 +133,47 @@ class AdViewSet(viewsets.ModelViewSet):
         image = get_object_or_404(AdImage, id=image_id, ad=ad)
         image.delete()
         return Response({'detail': 'Image was successfully deleted.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class FavouriteViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    pagination_class = AdPagination
+
+    def list(self, request):
+
+        favourites = Favourite.objects.filter(user=request.user).select_related(
+            'ad__user', 'ad__brand', 'ad__model', 'ad__body_type',
+            'ad__fuel_type', 'ad__transmission', 'ad__exterior_color'
+        ).prefetch_related('ad__images')
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(favourites, request)
+
+        if page is not None:
+            serializer = FavouriteSerializer(
+                page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+
+    def create(self, request):
+        ad_id = request.data.get('ad_id')
+        if not ad_id:
+            return Response({'detail': 'ad_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        ad = get_object_or_404(Ad, id=ad_id)
+
+        if ad.user == request.user:
+            return Response({'detail': "You cannot add your own ad to favourites."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Favourite.objects.filter(ad=ad, user=request.user).exists():
+            return Response({'detail': 'Ad is already in favourites.'}, status=status.HTTP_409_CONFLICT)
+
+        favourite = Favourite.objects.create(ad=ad, user=request.user)
+        serializer = FavouriteSerializer(
+            favourite, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, pk=None):
+        ad = get_object_or_404(Ad, id=pk)
+        favourite = get_object_or_404(Favourite, ad=ad, user=request.user)
+        favourite.delete()
+        return Response({'detail': 'Ad removed from favourites'}, status=status.HTTP_204_NO_CONTENT)

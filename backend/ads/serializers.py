@@ -2,7 +2,7 @@ from rest_framework import serializers
 from catalog.serializers import BrandSerializer, ModelCarSerializer, BodyTypeSerializer, FuelTypeSerializer, DriveTypeSerializer, TransmissionSerializer, ColorSerializer, InteriorMaterialSerializer
 from catalog.models import Brand, ModelCar, BodyType, FuelType, DriveType, Transmission, Color, InteriorMaterial
 from account.serializers import UserBasicSerializer, UserShortSerializer
-from .models import Ad, AdImage
+from .models import Ad, AdImage, Favourite
 
 
 class AdImageSerializer(serializers.ModelSerializer):
@@ -79,3 +79,12 @@ class AdListSerializer(serializers.ModelSerializer):
             'id', 'title', 'price', 'year', 'mileage', 'user', 'brand', 'model', 'body_type',
             'fuel_type', 'transmission', 'exterior_color', 'condition', 'created_at', 'images'
         ]
+
+
+class FavouriteSerializer(serializers.ModelSerializer):
+    ad = AdListSerializer(read_only=True)
+
+    class Meta:
+        model = Favourite
+        fields = ['id', 'ad', 'created_at']
+        read_only_fields = ['id', 'created_at']
