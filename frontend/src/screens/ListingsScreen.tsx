@@ -15,6 +15,7 @@ import ListingFilters from "../components/ListingsScreen/ListingFilters";
 import AdCard from "../components/ListingsScreen/AdCard";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchAds } from "../store/slices/adsSlice";
+import { fetchFavourites } from "../store/slices/favouriteSlice";
 import CloseIcon from "@mui/icons-material/Close";
 
 const ListingsScreen = () => {
@@ -23,6 +24,7 @@ const ListingsScreen = () => {
     const { cars, loading, error, count, currentPage } = useAppSelector(
         (state) => state.ads
     );
+    const { user } = useAppSelector((state) => state.auth);
     const [page, setPage] = useState(1);
     const initialFilters = location.state?.filters || {};
     const [filters, setFilters] = useState(initialFilters);
@@ -33,6 +35,12 @@ const ListingsScreen = () => {
     useEffect(() => {
         dispatch(fetchAds({ page: page || 1, filters }));
     }, [dispatch, page, filters]);
+
+    useEffect(() => {
+        if (user) {
+            dispatch(fetchFavourites(1));
+        }
+    }, []);
 
     const handleFiltersChange = (newFilters: any) => {
         setFilters(newFilters);
