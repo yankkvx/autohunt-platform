@@ -25,11 +25,25 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'channels',
 
     'account.apps.AccountConfig',
     'catalog.apps.CatalogConfig',
     'ads.apps.AdsConfig',
+    'chat.apps.ChatConfig',
 ]
+
+ASGI_APPLICATION = 'backend.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('redis', 6379)] if os.getenv('DOCKER_ENV') else [('127.0.0.1', 6379)]
+        }
+    }
+}
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
