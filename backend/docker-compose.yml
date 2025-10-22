@@ -14,7 +14,7 @@ services:
             - DOCKER_ENV=${DOCKER_ENV}
         depends_on:
             - redis # Wait for redis before starting
-        command: python manage.py runserver 0.0.0.0:8000
+        command: uvicorn backend.asgi:application --host 0.0.0.0 --port 8000 --reload
         restart: unless-stopped
 
     celery_worker:
