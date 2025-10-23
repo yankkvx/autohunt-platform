@@ -16,6 +16,7 @@ import AdminUsers from "./screens/Admin/AdminUsers";
 import AdminAds from "./screens/Admin/AdminAds";
 import AdminCatalog from "./screens/Admin/AdminCatalog";
 import FavouritesScreen from "./screens/FavouritesScreen";
+import ChatScreen from "./screens/ChatScreen";
 
 function App() {
     return (
@@ -89,6 +90,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <FavouritesScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/chat/:chatId"
+                            element={
+                                <ProtectedRoute>
+                                    <ChatScreen />
                                 </ProtectedRoute>
                             }
                         />
