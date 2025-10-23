@@ -10,6 +10,7 @@ import {
     fetchFavourites,
 } from "../../store/slices/favouriteSlice";
 import { useEffect } from "react";
+import { getOrCreateChat } from "../../store/slices/chatSlice";
 
 interface SellerInfoProps {
     ad: CarDetailes;
@@ -40,6 +41,13 @@ const SellerInfo = ({ ad, user }: SellerInfoProps) => {
             dispatch(removeFavourite(ad.id));
         } else {
             dispatch(addFavourite(ad.id));
+        }
+    };
+
+    const handleWriteMessage = async () => {
+        const result = await dispatch(getOrCreateChat(ad.id));
+        if (getOrCreateChat.fulfilled.match(result)) {
+            navigate(`/chat/${result.payload.id}`);
         }
     };
 
@@ -125,7 +133,7 @@ const SellerInfo = ({ ad, user }: SellerInfoProps) => {
                 </Box>
             ) : (
                 <Box sx={{ display: "flex", flexDirection: "column", mt: 2 }}>
-                    <Button variant="contained">Send message</Button>
+                    <Button variant="contained" onClick={handleWriteMessage}>Send message</Button>
                     <Button
                         variant="contained"
                         color="info"
