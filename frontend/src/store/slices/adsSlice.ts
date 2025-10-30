@@ -5,7 +5,6 @@ import {
 } from "@reduxjs/toolkit";
 import axios from "axios";
 import { MAIN_URL } from "../../api-config";
-import { bool } from "yup";
 
 interface NestedField {
     id: number;
@@ -42,12 +41,13 @@ export interface CarImage {
     image: string;
 }
 
-interface Car {
+export interface Car {
     id: number;
     title: string;
     price: number;
     year: number;
     user: UserBase;
+    condition: string;
     images: CarImage[];
 }
 
@@ -70,7 +70,6 @@ export interface CarDetailes extends Car {
     number_of_doors?: number;
     owner_count?: number;
     is_first_owner?: boolean;
-    condition?: string;
     body_type?: NestedField;
     fuel_type?: NestedField;
     drive_type?: NestedField;
@@ -133,6 +132,9 @@ interface AdsState {
     updateSuccess: boolean;
     deletingImage: boolean;
     deletingImageError: string | null;
+    deleteAd: boolean;
+    deleteError: string | null;
+    deleteSuccess: boolean;
 }
 
 const initialState: AdsState = {
@@ -155,6 +157,9 @@ const initialState: AdsState = {
     updateSuccess: false,
     deletingImage: false,
     deletingImageError: null,
+    deleteAd: false,
+    deleteError: null,
+    deleteSuccess: false,
 };
 
 export const fetchAds = createAsyncThunk(
@@ -162,6 +167,11 @@ export const fetchAds = createAsyncThunk(
     async ({ page = 1, filters = {} }: { page?: number; filters?: any }) => {
         const params = new URLSearchParams();
         params.append("page", String(page));
+
+        // Search filter
+        if (filters.search) {
+            params.append("search", filters.search);
+        }
 
         // Filters
         if (filters.brand) params.append("brand", filters.brand.value);
@@ -362,6 +372,28 @@ export const updateAd = createAsyncThunk(
     }
 );
 
+export const deleteAdByOwner = createAsyncThunk(
+    "ads/deleteAdByOwner",
+    async ({ adId }: { adId: number }, { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+
+            await axios.delete(`${MAIN_URL}/ads/${adId}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return { adId };
+        } catch (error: any) {
+            if (error.response?.data) {
+                return rejectWithValue(error.response.data);
+            }
+            return rejectWithValue("Failed to delete ad.");
+        }
+    }
+);
+
 export const deleteAdImage = createAsyncThunk(
     "ads/deleteImage",
     async (
@@ -414,6 +446,11 @@ const adsSlice = createSlice({
             state.updateSuccess = false;
             state.uploadingImages = false;
             state.uploadError = null;
+        },
+        resetDeleteState: (state) => {
+            state.deleteAd = false;
+            state.deleteError = null;
+            state.deleteSuccess = false;
         },
     },
     extraReducers: (builder) => {
@@ -530,10 +567,37 @@ const adsSlice = createSlice({
                     payload?.detail ||
                     payload?.message ||
                     "Failed to delete image.";
+            })
+
+            // Delete ad
+            .addCase(deleteAdByOwner.pending, (state) => {
+                state.deleteAd = true;
+                state.deleteError = null;
+                state.deleteSuccess = false;
+            })
+            .addCase(deleteAdByOwner.fulfilled, (state, action) => {
+                (state.deleteAd = false), (state.deleteSuccess = true);
+                state.cars = state.cars.filter(
+                    (car) => car.id !== action.payload.adId
+                );
+                state.count = state.count - 1;
+            })
+            .addCase(deleteAdByOwner.rejected, (state, action) => {
+                state.deleteAd = false;
+                state.deleteSuccess = true;
+                const payload = action.payload as any;
+                state.deleteError =
+                    payload?.detail ||
+                    payload.message ||
+                    "Failed to delete ad.";
             });
     },
 });
 
-export const { resetCreateState, resetUpdateState, clearCreateError } =
-    adsSlice.actions;
+export const {
+    resetCreateState,
+    resetUpdateState,
+    clearCreateError,
+    resetDeleteState,
+} = adsSlice.actions;
 export default adsSlice.reducer;
