@@ -41,6 +41,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     return
 
                 message = await self.save_message(text)
+
+                profile_image_url = None
+                if message.sender.profile_image:
+                    headers = dict(self.scope.get('headers', []))
+                    host = headers.get(b'host', b'localhost').decode('utf-8')
+                    scheme = self.scope.get('scheme', 'ws')
+                    http_scheme = 'https' if scheme == 'wss' else 'http'
+                    profile_image_url = f'{http_scheme}://{host}{message.sender.profile_image.url}'
+
                 await self.channel_layer.group_send(
                     self.chat_group_name,
                     {
@@ -53,7 +62,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                                 'first_name': message.sender.first_name,
                                 'last_name': message.sender.last_name,
                                 'email': message.sender.email,
-                                'profile_image': message.sender.profile_image.url if message.sender.profile_image else None,
+                                'profile_image': profile_image_url,
                             },
                             'is_read': message.is_read,
                             'created_at': message.created_at.isoformat()
