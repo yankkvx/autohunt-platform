@@ -12,6 +12,7 @@ from .filters import AdFilter
 from .utils import validate_image_file
 from .tasks import process_image_watermark
 from .pagination import AdPagination
+from account.throttles import CreateAdThrottle, UploadThrottle
 
 
 class AdViewSet(viewsets.ModelViewSet):
@@ -46,6 +47,13 @@ class AdViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         else:
             return [AllowAny()]
+
+    def get_throttles(self):
+        if self.action == 'create':
+            return [CreateAdThrottle()]
+        elif self.action == 'add_image':
+            return [UploadThrottle()]
+        return super().get_throttles()
 
     # Helper methot to ensure that only owner of Ad can modify it
     def check_ownership(self, ad):

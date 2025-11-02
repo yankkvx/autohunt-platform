@@ -10,18 +10,23 @@ from django.db import transaction, IntegrityError
 from .serializers import (UserSerializer, RegisterSerializer,
                           UpdateUserSerializer, DeleteAccountSerializer,
                           UserSerializerRefreshToken, MyTokenObtainPairSerializer)
+from .throttles import AuthThrottle, RegisterThrottle
 
 
 # Custom JWT token view using serializer
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [AuthThrottle]
 
 
 class RegisterView(APIView):
     """
     API endpoint for registering a new user
     """
+
+    permission_classes = [AllowAny]
+    throttle_classes = [RegisterThrottle]
 
     def post(self, request):
 

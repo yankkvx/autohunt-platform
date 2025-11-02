@@ -7,11 +7,13 @@ from django.db.models import Q
 from .models import Chat, Message
 from ads.models import Ad
 from .serializers import ChatSerializer, ChatDetailSerializer, MessageSerializer
+from account.throttles import MessageThrottle
 
 
 class ChatViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSerializer
+    throttle_classes = [MessageThrottle]
 
     def get_queryset(self):
         user = self.request.user
