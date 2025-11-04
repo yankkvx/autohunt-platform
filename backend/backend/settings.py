@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'catalog.apps.CatalogConfig',
     'ads.apps.AdsConfig',
     'chat.apps.ChatConfig',
+    'subscription.apps.SubscriptionConfig',
 ]
 
 ASGI_APPLICATION = 'backend.asgi.application'
@@ -57,7 +58,7 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
+        'anon': '1000/hour',
         'user': '1000/hour',
         'auth': '5/minute',
         'register': '5/hour',
