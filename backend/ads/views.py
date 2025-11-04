@@ -13,6 +13,7 @@ from .utils import validate_image_file
 from .tasks import process_image_watermark
 from .pagination import AdPagination
 from account.throttles import CreateAdThrottle, UploadThrottle
+from subscription.utils import can_user_create_ad, get_user_ad_stats
 
 
 class AdViewSet(viewsets.ModelViewSet):
@@ -61,7 +62,14 @@ class AdViewSet(viewsets.ModelViewSet):
             raise PermissionDenied('You can modify only your own ads.')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        if not can_user_create_ad(user):
+            stats = get_user_ad_stats(user)
+            raise PermissionDenied(
+                f'Ad limit reached. You have {stats["usage"]}/{stats["limit"]} ads. '
+                f'{"Purchase a subscription plan to get more ad slots." if user.account_type == "company" else "Please delete an ad to create a new one."}'
+            )
+        serializer.save(user=user)
 
     def perform_update(self, serializer):
         ad = self.get_object()
@@ -78,6 +86,14 @@ class AdViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset().order_by('-created_at')[:10]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def my_stats(self, request):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+        stats = get_user_ad_stats(user)
+        return Response(stats, status=status.HTTP_200_OK)
 
     # Custom action, that allow adding multiple images to ad
     @action(detail=True, methods=['post'])
