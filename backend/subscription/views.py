@@ -1,9 +1,11 @@
 from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db import transaction
 from account.models import User
 from .models import SubscriptionPlan, UserSubscription
 from .serializers import SubscriptionPlanSerializer, UserSubscriptionSerializer, ActivateSubscriptionSerializer
@@ -26,6 +28,34 @@ class SubscriptionPlanViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class ValidatePurchaseView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        if user.account_type != User.ACCOUNT_COMPANY:
+            return Response({'detaшl': 'Only company accounts can purchase subscription plans.'}, status=status.HTTP_403_FORBIDDEN)
+
+        plan_id = request.data.get('plan_id')
+        if not plan_id:
+            return Response({'detail': 'plan_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
+
+        try:
+            active_sub = UserSubscription.objects.filter(
+                user=user, is_active=True, end_date__gt=timezone.now()).select_related('plan').latest('created_at')
+            if active_sub.plan_id == plan_id:
+                return Response({'detail': 'You already have an active subscription to this plan.'}, status=status.HTTP_400_BAD_REQUEST)
+            if plan.price <= active_sub.plan.price:
+                return Response({'detail': 'You can only upgrade current plan, not downgrade it.'}, status=status.HTTP_400_BAD_REQUEST)
+        except UserSubscription.DoesNotExist:
+            pass
+
+        return Response({'detail': 'Purchase allowed'}, status=status.HTTP_200_OK)
+
+
 class UserSubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSubscriptionSerializer
     permission_classes = [IsAuthenticated]
@@ -39,13 +69,13 @@ class UserSubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
         user = request.user
 
         if user.account_type != User.ACCOUNT_COMPANY:
-            return Response({'detial': 'Only company accounts can purchase subscription plans.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'detail': 'Only company accounts can purchase subscription plans.'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = ActivateSubscriptionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        plan_id = serializer.validated_data['plan_od']
+        plan_id = serializer.validated_data['plan_id']
         paypal_order_id = serializer.validated_data['paypal_order_id']
         paypal_payer_id = serializer.validated_data.get('paypal_payer_id', '')
 
@@ -54,19 +84,39 @@ class UserSubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
         if UserSubscription.objects.filter(paypal_order_id=paypal_order_id).exists():
             return Response({'detail': 'This payment has already been processed.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        subscription = UserSubscription.objects.create(
-            user=user,
-            plan=plan,
-            plan_name=plan.name,
-            addiional_ads=plan.additional_ads,
-            end_date=timezone.now() + timezone.timedelta(days=plan.duration_days),
-            paypal_order_id=paypal_order_id,
-            paypal_payer_id=paypal_payer_id,
-            is_active=True
-        )
+        try:
+            active_sub = UserSubscription.objects.filter(
+                user=user, is_active=True, end_date__gt=timezone.now()).select_related('plan').latest('created_at')
+            if active_sub.plan_id == plan_id:
+                return Response({'detail': 'You already have an active subscription to this plan.'}, status=status.HTTP_400_BAD_REQUEST)
+            if plan.price <= active_sub.plan.price:
+                return Response({'detail': 'You can only upgrade current plan, not downgrade it.'}, status=status.HTTP_400_BAD_REQUEST)
+        except UserSubscription.DoesNotExist:
+            pass
+
+        with transaction.atomic():
+            deactivated_count = UserSubscription.objects.filter(
+                user=user, is_active=True, end_date__gt=timezone.now()).update(is_active=False)
+
+            subscription = UserSubscription.objects.create(
+                user=user,
+                plan=plan,
+                plan_name=plan.name,
+                additional_ads=plan.additional_ads,
+                end_date=timezone.now() + timezone.timedelta(days=plan.duration_days),
+                paypal_order_id=paypal_order_id,
+                paypal_payer_id=paypal_payer_id,
+                is_active=True
+            )
 
         response_serializer = UserSubscriptionSerializer(subscription)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        response_data = response_serializer.data
+
+        if deactivated_count > 0:
+            response_data['detail'] = f'Previous subscription deactivated. New subscription activated.'
+        else:
+            response_data['detail'] = f'Subscription activated successfully.'
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def active(self, request):

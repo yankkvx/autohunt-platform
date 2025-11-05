@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import SubscriptionPlanViewSet, UserSubscriptionViewSet
+from .views import SubscriptionPlanViewSet, UserSubscriptionViewSet, ValidatePurchaseView
 
 router = DefaultRouter()
 router.register('plans', SubscriptionPlanViewSet, basename='subscription-plan')
@@ -8,5 +8,7 @@ router.register('my-subscriptions', UserSubscriptionViewSet,
                 basename='user-subscriptions')
 
 urlpatterns = [
-    path('subscriptions/', include(router.urls))
+    path('subscriptions/', include(router.urls)),
+    path('subscriptions/validate-pruchase/',
+         ValidatePurchaseView.as_view(), name='validate-purchase')
 ]
