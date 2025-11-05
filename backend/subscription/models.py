@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from datetime import timedelta
 
 
@@ -51,6 +52,14 @@ class UserSubscription(models.Model):
             self.is_active = False
 
         super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.is_active and self.end_date > timezone.now():
+            existing_active = UserSubscription.objects.filter(
+                user=self.user, is_active=True, end_date__gt=timezone.now()).exclude(pk=self.pk)
+            if existing_active.exists():
+                raise ValidationError(
+                    'User already has an acrive subscription')
 
     @property
     def is_expired(self):
