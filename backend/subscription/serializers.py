@@ -17,7 +17,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserSubscription
-        fields = ['id', 'plan', 'plan_details', 'plan_name', 'additional_plans',
+        fields = ['id', 'plan', 'plan_details', 'plan_name', 'additional_ads',
                   'start_date', 'end_date', 'is_active', 'days_remaining', 'is_expired', 'created_at']
         read_only_fields = ['id', 'start_date',
                             'end_date', 'is_active', 'created_at']
