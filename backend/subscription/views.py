@@ -132,7 +132,7 @@ class UserSubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
         active_subs = self.get_queryset().filter(
             is_active=True, end_date__gt=timezone.now())
 
-        stats['activate_subscriptions'] = UserSubscriptionSerializer(
+        stats['active_subscriptions'] = UserSubscriptionSerializer(
             active_subs, many=True).data
 
         return Response(stats)
