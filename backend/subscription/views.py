@@ -35,7 +35,7 @@ class ValidatePurchaseView(APIView):
         user = request.user
 
         if user.account_type != User.ACCOUNT_COMPANY:
-            return Response({'detaшl': 'Only company accounts can purchase subscription plans.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'detail': 'Only company accounts can purchase subscription plans.'}, status=status.HTTP_403_FORBIDDEN)
 
         plan_id = request.data.get('plan_id')
         if not plan_id:
