@@ -6,6 +6,7 @@ import authReducer from "./slices/authSlice";
 import adminReducer from "./slices/adminSlice";
 import favouritesReduces from "./slices/favouriteSlice";
 import chatReducer from "./slices/chatSlice";
+import subscriptionReducer from "./slices/subscriptionSlice";
 
 export const rootReducer = combineReducers({
     catalog: catalogReducer,
@@ -15,6 +16,7 @@ export const rootReducer = combineReducers({
     admin: adminReducer,
     favourites: favouritesReduces,
     chat: chatReducer,
+    subscription: subscriptionReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
