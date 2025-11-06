@@ -17,6 +17,7 @@ import AdminAds from "./screens/Admin/AdminAds";
 import AdminCatalog from "./screens/Admin/AdminCatalog";
 import FavouritesScreen from "./screens/FavouritesScreen";
 import ChatScreen from "./screens/ChatScreen";
+import SubscruptionPlansScreen from "./screens/SubscriptionPlansScreen";
 
 function App() {
     return (
@@ -98,6 +99,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <ChatScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/subscriptions"
+                            element={
+                                <ProtectedRoute>
+                                    <SubscruptionPlansScreen />
                                 </ProtectedRoute>
                             }
                         />
