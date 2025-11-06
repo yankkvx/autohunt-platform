@@ -9,6 +9,6 @@ router.register('my-subscriptions', UserSubscriptionViewSet,
 
 urlpatterns = [
     path('subscriptions/', include(router.urls)),
-    path('subscriptions/validate-pruchase/',
+    path('subscriptions/validate-purchase/',
          ValidatePurchaseView.as_view(), name='validate-purchase')
 ]
