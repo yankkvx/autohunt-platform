@@ -25,6 +25,9 @@ interface AdminState {
 
     actionLoading: boolean;
     actionError: string | null;
+
+    plansLoading: boolean;
+    plansError: string | null;
 }
 
 const initialState: AdminState = {
@@ -35,6 +38,8 @@ const initialState: AdminState = {
     catalogError: null,
     actionLoading: false,
     actionError: null,
+    plansLoading: false,
+    plansError: null,
 };
 
 export const fetchAllUsers = createAsyncThunk(
@@ -275,14 +280,115 @@ export const deleteAdByAdmin = createAsyncThunk(
     }
 );
 
+export const createPlanByAdmin = createAsyncThunk(
+    "admin/createPlan",
+    async (data: any, { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+            const response = await axios.post(
+                `${MAIN_URL}/subscriptions/plans/`,
+                data,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.data) {
+                const errorData = error.response.data;
+
+                if (errorData.detail) {
+                    return rejectWithValue(errorData.detail);
+                }
+                if (typeof errorData === "object") {
+                    const firstError = Object.values(errorData)[0];
+                    return rejectWithValue(
+                        Array.isArray(firstError) ? firstError[0] : firstError
+                    );
+                }
+            }
+            return rejectWithValue("Failed to create plan.");
+        }
+    }
+);
+
+export const editPlanByAdmin = createAsyncThunk(
+    "admin/editPlan",
+    async (
+        { id, data }: { id: number; data: any },
+        { getState, rejectWithValue }
+    ) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+            const response = await axios.put(
+                `${MAIN_URL}/subscriptions/plans/${id}/`,
+                data,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.data) {
+                const errorData = error.response.data;
+
+                if (errorData.detail) {
+                    return rejectWithValue(errorData.detail);
+                }
+                if (typeof errorData === "object") {
+                    const firstError = Object.values(errorData)[0];
+                    return rejectWithValue(
+                        Array.isArray(firstError) ? firstError[0] : firstError
+                    );
+                }
+            }
+            return rejectWithValue("Failed to edit plan.");
+        }
+    }
+);
+
+export const deletePlanByAdmin = createAsyncThunk(
+    "admin/deletePlan",
+    async (id: number, { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+            await axios.delete(`${MAIN_URL}/subscriptions/plans/${id}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return id;
+        } catch (error: any) {
+            if (error.response?.data) {
+                const errorData = error.response.data;
+
+                if (errorData.detail) {
+                    return rejectWithValue(errorData.detail);
+                }
+                if (typeof errorData === "object") {
+                    const firstError = Object.values(errorData)[0];
+                    return rejectWithValue(
+                        Array.isArray(firstError) ? firstError[0] : firstError
+                    );
+                }
+            }
+            return rejectWithValue("Failed to delete plan.");
+        }
+    }
+);
+
 const adminSlice = createSlice({
     name: "admin",
     initialState,
     reducers: {
         clearErrors: (state) => {
-            (state.usersError = null),
-                (state.catalogError = null),
-                (state.actionError = null);
+            state.usersError = null;
+            state.catalogError = null;
+            state.actionError = null;
+            state.plansError = null;
         },
     },
     extraReducers: (builder) => {
@@ -390,6 +496,46 @@ const adminSlice = createSlice({
             .addCase(deleteCatalogItem.rejected, (state, action) => {
                 state.catalogLoading = false;
                 state.catalogError = action.payload as string;
+            })
+
+            // Plan actions
+            .addCase(createPlanByAdmin.pending, (state) => {
+                state.plansLoading = true;
+                state.plansError = null;
+            })
+            .addCase(createPlanByAdmin.fulfilled, (state) => {
+                state.plansLoading = false;
+                state.plansError = null;
+            })
+            .addCase(createPlanByAdmin.rejected, (state, action) => {
+                state.plansLoading = false;
+                state.plansError = action.payload as string;
+            })
+
+            .addCase(editPlanByAdmin.pending, (state) => {
+                state.plansLoading = true;
+                state.plansError = null;
+            })
+            .addCase(editPlanByAdmin.fulfilled, (state) => {
+                state.plansLoading = false;
+                state.plansError = null;
+            })
+            .addCase(editPlanByAdmin.rejected, (state, action) => {
+                state.plansLoading = false;
+                state.plansError = action.payload as string;
+            })
+
+            .addCase(deletePlanByAdmin.pending, (state) => {
+                state.plansLoading = true;
+                state.plansError = null;
+            })
+            .addCase(deletePlanByAdmin.fulfilled, (state) => {
+                state.plansLoading = false;
+                state.plansError = null;
+            })
+            .addCase(deletePlanByAdmin.rejected, (state, action) => {
+                state.plansLoading = false;
+                state.plansError = action.payload as string;
             });
     },
 });
