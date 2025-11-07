@@ -16,6 +16,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import CategoryIcon from "@mui/icons-material/Category";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -25,6 +26,7 @@ interface DashboardStats {
     totalAds: number;
     totalBrands: number;
     totalModels: number;
+    totalPlans: number;
 }
 
 const AdminDashboard = () => {
@@ -36,13 +38,14 @@ const AdminDashboard = () => {
         totalAds: 0,
         totalBrands: 0,
         totalModels: 0,
+        totalPlans: 0,
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const [usersRes, adsRes, brandsRes, modelsRes] =
+                const [usersRes, adsRes, brandsRes, modelsRes, plansRes] =
                     await Promise.all([
                         axios.get(`${MAIN_URL}/admin/users`, {
                             headers: {
@@ -52,6 +55,7 @@ const AdminDashboard = () => {
                         axios.get(`${MAIN_URL}/ads/`),
                         axios.get(`${MAIN_URL}/catalog/brands/`),
                         axios.get(`${MAIN_URL}/catalog/models/`),
+                        axios.get(`${MAIN_URL}/subscriptions/plans/`),
                     ]);
 
                 const users = usersRes.data;
@@ -68,6 +72,7 @@ const AdminDashboard = () => {
                         modelsRes.data.results?.length ||
                         modelsRes.data.length ||
                         0,
+                    totalPlans: plansRes.data.length || 0,
                 });
             } catch (error) {
                 return "Failed to fetch stats.";
@@ -203,6 +208,31 @@ const AdminDashboard = () => {
                         <Typography variant="h6">Total Models</Typography>
                     </Paper>
                 </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            display: "flex",
+                            flexDirection: "column",
+                            height: 140,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                mb: 1,
+                            }}
+                        >
+                            <ReceiptIcon sx={{ fontSize: 40, mr: 1 }} />
+                            <Typography variant="h4" fontWeight="bold">
+                                {stats.totalPlans}
+                            </Typography>
+                        </Box>
+                        <Typography variant="h6">Total Plans</Typography>
+                    </Paper>
+                </Grid>
             </Grid>
 
             <Typography variant="h5" gutterBottom fontWeight={900}>
@@ -284,6 +314,33 @@ const AdminDashboard = () => {
                                         </Typography>
                                         <Typography variant="body2">
                                             Brands, models, fuel, etc.
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Card>
+                        <CardActionArea
+                            onClick={() => navigate("/admin/plans")}
+                        >
+                            <CardContent>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <ReceiptIcon sx={{ fontSize: 40, mr: 2 }} />
+                                    <Box>
+                                        <Typography variant="h5">
+                                            Manage Plans
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Subscription plans
                                         </Typography>
                                     </Box>
                                 </Box>
