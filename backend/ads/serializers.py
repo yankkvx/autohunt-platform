@@ -48,6 +48,18 @@ class AdSerializer(serializers.ModelSerializer):
     interior_material_id = serializers.PrimaryKeyRelatedField(
         queryset=InteriorMaterial.objects.all(), source='interior_material', write_only=True, required=False, allow_null=True)
 
+    city = serializers.CharField(required=False, allow_blank=True)
+    state = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=False, allow_blank=True)
+    country_code = serializers.CharField(required=False, allow_blank=True)
+    postcode = serializers.CharField(required=False, allow_blank=True)
+    latitude = serializers.DecimalField(
+        required=False, max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(
+        required=False, max_digits=9, decimal_places=6)
+    full_address = serializers.CharField(required=False, allow_blank=True)
+    location = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Ad
         fields = [
@@ -56,7 +68,8 @@ class AdSerializer(serializers.ModelSerializer):
             'capacity', 'battery_power', 'battery_capacity', 'price', 'vin', 'location', 'warranty', 'airbag',
             'air_conditioning', 'number_of_seats', 'number_of_doors', 'condition', 'owner_count', 'is_first_owner',
             'created_at', 'updated_at', 'images', 'brand_id', 'model_id', 'body_type_id', 'fuel_type_id',
-            'drive_type_id', 'transmission_id', 'exterior_color_id', 'interior_color_id', 'interior_material_id'
+            'drive_type_id', 'transmission_id', 'exterior_color_id', 'interior_color_id', 'interior_material_id',
+            'city', 'state', 'country', 'country_code', 'postcode', 'latitude', 'longitude', 'full_address'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
