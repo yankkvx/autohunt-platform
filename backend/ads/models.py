@@ -71,8 +71,48 @@ class Ad(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    city = models.CharField(max_length=150, null=True, blank=True)
+    state = models.CharField(max_length=150, null=True, blank=True)
+    country = models.CharField(max_length=150, null=True, blank=True)
+    country_code = models.CharField(max_length=2, null=True, blank=True)
+    postcode = models.CharField(max_length=50, null=True, blank=True)
+
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True)
+
+    full_address = models.CharField(max_length=300, null=True, blank=True)
+
     def __str__(self):
         return f'Ad {self.id}: {self.user.email} - {self.brand} - {self.model}'
+
+    def get_location_display(self):
+        parts = []
+        if self.city:
+            parts.append(self.city)
+        if self.state:
+            parts.append(self.state)
+        if self.country:
+            parts.append(self.country)
+        if parts:
+            return ', '.join(parts)
+
+        return self.location or 'Location not specified.'
+
+    def set_location_from_geocode(self, geocode_data: dict):
+        self.full_address = geocode_data.get('display_name')
+        self.latitude = geocode_data.get('latitude')
+        self.longitude = geocode_data.get('longitude')
+
+        address = geocode_data.get('address', {})
+        self.city = address.get('city')
+        self.state = address.get('state')
+        self.country = address.get('country')
+        self.country_code = address.get('country_code')
+        self.postcode = address.get('postcode')
+
+        self.location = self.get_location_display()
 
     def clean(self):
         super().clean()
