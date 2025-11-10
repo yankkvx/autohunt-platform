@@ -1,7 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -14,6 +15,39 @@ from .tasks import process_image_watermark
 from .pagination import AdPagination
 from account.throttles import CreateAdThrottle, UploadThrottle
 from subscription.utils import can_user_create_ad, get_user_ad_stats
+from .location_service import LocationService
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def search_location(request):
+    query = request.query_params.get('q', '')
+
+    if not query or len(query) < 3:
+        return Response({'results': []})
+
+    results = LocationService.search_location(query=query, limit=10)
+    return Response({'results': results})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def reverse_geocode(request):
+    try:
+        lat = float(request.query_params.get('lat'))
+        lon = float(request.query_params.get('lon'))
+
+        if not LocationService.validate_coordinates(lat, lon):
+            return Response({'detail': 'Invalid coordinates'}, status=status.HTTP_400_BAD_REQUEST)
+
+        result = LocationService.reverse_geocode(lat, lon)
+
+        if result:
+            return Response(result)
+        return Response({'detail': 'Location not fount.'}, status=status.HTTP_404_NOT_FOUND)
+
+    except (ValueError, TypeError):
+        return Response({'detail': 'Invalid parametes'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AdViewSet(viewsets.ModelViewSet):
@@ -69,7 +103,14 @@ class AdViewSet(viewsets.ModelViewSet):
                 f'Ad limit reached. You have {stats["usage"]}/{stats["limit"]} ads. '
                 f'{"Purchase a subscription plan to get more ad slots." if user.account_type == "company" else "Please delete an ad to create a new one."}'
             )
-        serializer.save(user=user)
+        ad = serializer.save(user=user)
+        location_str = self.request.data.get('location')
+        if location_str:
+            geocode_results = LocationService.search_location(
+                location_str, limit=1)
+            if geocode_results:
+                ad.set_location_from_geocode(geocode_results[0])
+                ad.save()
 
     def perform_update(self, serializer):
         ad = self.get_object()
