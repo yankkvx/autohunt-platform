@@ -8,6 +8,7 @@ import {
     Checkbox,
 } from "@mui/material";
 import Select from "react-select";
+import LocationInput from "../LocationInput";
 
 const AdditionalInfoStep = ({
     formik,
@@ -16,7 +17,8 @@ const AdditionalInfoStep = ({
     interiorMaterialsOptions,
     selectStyles,
 }: any) => {
-    const menuPortalTarget = typeof document !== "undefined" ? document.body : null;
+    const menuPortalTarget =
+        typeof document !== "undefined" ? document.body : null;
     return (
         <Box>
             <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
@@ -87,16 +89,9 @@ const AdditionalInfoStep = ({
                     />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                        Location
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        label="Location"
-                        name="location"
-                        value={formik.values.location}
-                        onChange={formik.handleChange}
-                        placeholder="Chicago, Il"
+                    <LocationInput
+                        formik={formik}
+                        selectStyles={selectStyles}
                     />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>

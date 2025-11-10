@@ -60,8 +60,8 @@ const CreateAdScreen = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
-    const [isProcessingImages, setIsProcessingImages] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isProcessingImages, setIsProcessingImages] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
         brands,
@@ -93,11 +93,23 @@ const CreateAdScreen = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        if (createSuccess && createdAd && !uploadingImages && !isProcessingImages) {
-            setIsProcessingImages(true)
+        if (
+            createSuccess &&
+            createdAd &&
+            !uploadingImages &&
+            !isProcessingImages
+        ) {
+            setIsProcessingImages(true);
             navigate(`/ads/${createdAd.id}`);
         }
-    }, [createSuccess, createdAd, uploadingImages, isProcessingImages, navigate, dispatch]);
+    }, [
+        createSuccess,
+        createdAd,
+        uploadingImages,
+        isProcessingImages,
+        navigate,
+        dispatch,
+    ]);
 
     useEffect(() => {
         return () => {
@@ -128,6 +140,13 @@ const CreateAdScreen = () => {
             price: "",
             vin: "",
             location: "",
+            city: "",
+            state: "",
+            country: "",
+            country_code: "",
+            postcode: "",
+            latitude: "",
+            longitude: "",
             warranty: false,
             airbag: false,
             air_conditioning: false,
@@ -195,8 +214,8 @@ const CreateAdScreen = () => {
     }));
     const modelOptions = formik.values.brand
         ? models
-            .filter((m: any) => m.brand.id === formik.values.brand.value)
-            .map((m: any) => ({ value: m.id, label: m.name }))
+              .filter((m: any) => m.brand.id === formik.values.brand.value)
+              .map((m: any) => ({ value: m.id, label: m.name }))
         : [];
     const bodyTypeOptions = bodyTypes.map((bt: any) => ({
         value: bt.id,
@@ -267,7 +286,13 @@ const CreateAdScreen = () => {
     };
 
     const handleSubmit = async () => {
-        if (isSubmitting || creating || uploadingImages || isProcessingImages || createSuccess) {
+        if (
+            isSubmitting ||
+            creating ||
+            uploadingImages ||
+            isProcessingImages ||
+            createSuccess
+        ) {
             return;
         }
         const errors = await formik.validateForm();
@@ -284,7 +309,7 @@ const CreateAdScreen = () => {
             });
             return;
         }
-        setIsSubmitting(true)
+        setIsSubmitting(true);
         formik.handleSubmit();
     };
 
@@ -413,7 +438,11 @@ const CreateAdScreen = () => {
                                         ? () => navigate(-1)
                                         : handleBack
                                 }
-                                disabled={creating || uploadingImages || isProcessingImages}
+                                disabled={
+                                    creating ||
+                                    uploadingImages ||
+                                    isProcessingImages
+                                }
                             >
                                 {activeStep === 0 ? "Cancel" : "Back"}
                             </Button>
@@ -432,9 +461,16 @@ const CreateAdScreen = () => {
                                     variant="contained"
                                     type="button"
                                     onClick={handleSubmit}
-                                    disabled={creating || uploadingImages || isProcessingImages || createSuccess}
+                                    disabled={
+                                        creating ||
+                                        uploadingImages ||
+                                        isProcessingImages ||
+                                        createSuccess
+                                    }
                                     startIcon={
-                                        (creating || uploadingImages || isProcessingImages) && (
+                                        (creating ||
+                                            uploadingImages ||
+                                            isProcessingImages) && (
                                             <CircularProgress size={20} />
                                         )
                                     }
@@ -442,10 +478,10 @@ const CreateAdScreen = () => {
                                     {creating
                                         ? "Creating.."
                                         : uploadingImages
-                                            ? "Uploading Photos..."
-                                            : isProcessingImages
-                                                ? 'Processing Images...'
-                                                : "Publish Ad"}
+                                        ? "Uploading Photos..."
+                                        : isProcessingImages
+                                        ? "Processing Images..."
+                                        : "Publish Ad"}
                                 </Button>
                             )}
                         </Box>
