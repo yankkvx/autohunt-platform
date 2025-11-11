@@ -11,6 +11,7 @@ from .serializers import (UserSerializer, RegisterSerializer,
                           UpdateUserSerializer, DeleteAccountSerializer,
                           UserSerializerRefreshToken, MyTokenObtainPairSerializer)
 from .throttles import AuthThrottle, RegisterThrottle
+from ads.location_service import LocationService
 
 
 # Custom JWT token view using serializer
@@ -55,6 +56,20 @@ class UserManagement(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def _apply_location(self, user):
+        # Private methdod to apply geocoding for company_office field
+        if user.account_type != User.ACCOUNT_COMPANY:
+            return
+        company_office = self.request.data.get('company_office')
+        if not company_office:
+            return
+
+        geocode_results = LocationService.search_location(
+            company_office, limit=1)
+        if geocode_results:
+            user.set_location_from_geocode(geocode_results[0])
+            user.save()
+
     def get(self, request):
         """
         Retrieve the authenticated user prifles.
@@ -85,6 +100,7 @@ class UserManagement(APIView):
         try:
             with transaction.atomic():
                 serializer.save()
+                self._apply_location(user)
                 response_serializer = UserSerializerRefreshToken(user)
                 return Response(response_serializer.data, status=status.HTTP_200_OK)
         except IntegrityError as e:
