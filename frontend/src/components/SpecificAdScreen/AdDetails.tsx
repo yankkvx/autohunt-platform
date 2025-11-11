@@ -7,6 +7,7 @@ import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import SettingsInputComponentIcon from "@mui/icons-material/SettingsInputComponent";
 import CheckIcon from "@mui/icons-material/Check";
 import type { CarDetailes } from "../../store/slices/adsSlice";
+import LocationMap from "../LocationMap";
 
 interface AdDetailsProps {
     ad: CarDetailes;
@@ -209,6 +210,22 @@ const AdDetails = ({ ad }: AdDetailsProps) => {
                         </Box>
                     </Box>
                 ))}
+            </Box>
+
+            <Box
+                sx={{
+                    mt: 3,
+                    bgcolor: "background.paper",
+                    boxShadow: 2,
+                    borderRadius: 3,
+                    p: 3,
+                }}
+            >
+                <LocationMap
+                    latitude={ad.latitude}
+                    longitude={ad.longitude}
+                    locationName={`${ad.city}, ${ad.country}`}
+                />
             </Box>
         </>
     );

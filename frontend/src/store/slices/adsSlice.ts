@@ -63,6 +63,13 @@ export interface CarDetailes extends Car {
     battery_capacity?: number;
     vin?: string;
     location?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    country_code?: string;
+    postcode?: string;
+    latitude?: number;
+    longitude?: number;
     warranty?: boolean;
     airbag?: boolean;
     air_conditioning?: boolean;
