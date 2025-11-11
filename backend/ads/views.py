@@ -95,6 +95,18 @@ class AdViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_staff and ad.user != self.request.user:
             raise PermissionDenied('You can modify only your own ads.')
 
+    # Private methpd to apply location data to the ad
+    def _apply_locations(self, ad):
+        location_str = self.request.data.get('location')
+        if not location_str:
+            return
+
+        geocode_results = LocationService.search_location(
+            location_str, limit=1)
+        if geocode_results:
+            ad.set_location_from_geocode(geocode_results[0])
+            ad.save()
+
     def perform_create(self, serializer):
         user = self.request.user
         if not can_user_create_ad(user):
@@ -104,18 +116,13 @@ class AdViewSet(viewsets.ModelViewSet):
                 f'{"Purchase a subscription plan to get more ad slots." if user.account_type == "company" else "Please delete an ad to create a new one."}'
             )
         ad = serializer.save(user=user)
-        location_str = self.request.data.get('location')
-        if location_str:
-            geocode_results = LocationService.search_location(
-                location_str, limit=1)
-            if geocode_results:
-                ad.set_location_from_geocode(geocode_results[0])
-                ad.save()
+        self._apply_locations(ad)
 
     def perform_update(self, serializer):
         ad = self.get_object()
         self.check_ownership(ad)
-        serializer.save()
+        updated_ad = serializer.save()
+        self._apply_locations(updated_ad)
 
     def perform_destroy(self, instance):
         self.check_ownership(instance)
