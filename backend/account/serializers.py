@@ -12,7 +12,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'account_type', 'phone_number', 'first_name',
                   'last_name', 'about', 'profile_image', 'telegram', 'twitter',
                   'instagram', 'company_name', 'company_website', 'company_office',
-                  'is_active', 'is_staff']
+                  'is_active', 'is_staff', 'city', 'state', 'country', 'country_code',
+                  'postcode', 'latitude', 'longitude', 'full_address']
 
 
 class UserShortSerializer(serializers.ModelSerializer):
@@ -115,10 +116,22 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'})
     profile_image = serializers.ImageField(required=False)
 
+    city = serializers.CharField(required=False, allow_blank=True)
+    state = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=False, allow_blank=True)
+    country_code = serializers.CharField(required=False, allow_blank=True)
+    postcode = serializers.CharField(required=False, allow_blank=True)
+    latitude = serializers.DecimalField(
+        required=False, max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(
+        required=False, max_digits=9, decimal_places=6)
+    full_address = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'phone_number', 'about', 'profile_image', 'telegram',
-                  'twitter', 'instagram', 'company_name', 'company_website', 'company_office', 'password']
+                  'twitter', 'instagram', 'company_name', 'company_website', 'company_office', 'password',
+                  'city', 'state', 'country', 'country_code', 'postcode', 'latitude', 'longitude', 'full_address']
 
     def validate_phone_number(self, value):
         user = self.instance
@@ -143,6 +156,14 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             attrs.pop('company_name', None)
             attrs.pop('company_website', None)
             attrs.pop('company_office', None)
+            attrs.pop('city', None)
+            attrs.pop('state', None)
+            attrs.pop('country', None)
+            attrs.pop('country_code', None)
+            attrs.pop('postcode', None)
+            attrs.pop('latitude', None)
+            attrs.pop('longitude', None)
+            attrs.pop('full_address', None)
 
         return attrs
 
