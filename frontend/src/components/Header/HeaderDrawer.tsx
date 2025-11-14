@@ -324,6 +324,36 @@ const HeaderDrawer = ({ open, onClose }: HeaderDrawerProps) => {
                                             }}
                                         />
                                     </ListItem>
+                                    {user?.account_type == "company" && (
+                                        <ListItem
+                                            component={LinkRouter}
+                                            to="/subscriptions"
+                                            onClick={onClose}
+                                            sx={{
+                                                color: theme.palette.text
+                                                    .primary,
+                                                borderRadius: 2,
+                                            }}
+                                        >
+                                            <ListItemText
+                                                primary="Subscriptions"
+                                                sx={{
+                                                    "& .MuiListItemText-primary":
+                                                        {
+                                                            fontSize: {
+                                                                xs: "1.25rem",
+                                                                sm: "1.5rem",
+                                                                md: "1.75rem",
+                                                                lg: "2rem",
+                                                            },
+                                                            fontWeight: 600,
+                                                            color: theme.palette
+                                                                .text.primary,
+                                                        },
+                                                }}
+                                            />
+                                        </ListItem>
+                                    )}
                                     <Divider sx={{ my: 1.5 }} />
                                     <ListItem
                                         component={Button}

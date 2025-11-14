@@ -11,6 +11,7 @@ import { useTheme } from "@mui/material/styles";
 import { Link as LinkRouter } from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Logout from "@mui/icons-material/Logout";
 import { useState } from "react";
@@ -163,6 +164,25 @@ const UserMenu = () => {
                 >
                     <BookmarkIcon /> Favourites
                 </MenuItem>
+                {user?.account_type === "company" && (
+                    <MenuItem
+                        component={LinkRouter}
+                        to="/subscriptions"
+                        sx={{
+                            gap: 2,
+                            fontWeight: "500",
+                            py: 1.5,
+                            px: 2,
+                            transition: "all 0.2s",
+                            "&:hover": {
+                                backgroundColor: theme.palette.action.hover,
+                                pl: 2.5,
+                            },
+                        }}
+                    >
+                        <ReceiptIcon /> Subscriptions
+                    </MenuItem>
+                )}
                 <Divider sx={{ my: 1 }} />
                 <MenuItem
                     onClick={handleLogout}
