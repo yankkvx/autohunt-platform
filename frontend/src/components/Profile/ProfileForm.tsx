@@ -14,6 +14,7 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import type { FormikProps } from "formik";
+import LocationInput from "../LocationInput";
 
 interface FormValues {
     first_name: string;
@@ -27,6 +28,13 @@ interface FormValues {
     telegram: string;
     twitter: string;
     instagram: string;
+    city: string;
+    state: string;
+    country: string;
+    country_code: string;
+    latitude: number;
+    longitude: number;
+    full_address: string;
 }
 
 interface ProfileFormProps {
@@ -49,6 +57,15 @@ const ProfileForm = ({
     onImageChange,
 }: ProfileFormProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const selectStyles = {
+        control: (base: any) => ({
+            ...base,
+            minHeight: 56,
+            borderColor: "#c4c4c4",
+        }),
+        menuPortal: (base: any) => ({ ...base, zIndex: 100 }),
+    };
     return (
         <form onSubmit={formik.handleSubmit}>
             <Paper
@@ -263,16 +280,22 @@ const ProfileForm = ({
                                     />
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="Company Office"
-                                        name="company_office"
-                                        value={formik.values.company_office}
-                                        onChange={formik.handleChange}
-                                        onBlur={formik.handleBlur}
-                                        disabled={!isEdit}
-                                        variant={isEdit ? "outlined" : "filled"}
-                                    />
+                                    {isEdit ? (
+                                        <LocationInput
+                                            formik={formik}
+                                            selectStyles={selectStyles}
+                                            fieldName="company_office"
+                                            label="Company Office"
+                                        />
+                                    ) : (
+                                        <TextField
+                                            fullWidth
+                                            label="Company Office"
+                                            value={formik.values.company_office}
+                                            disabled
+                                            variant="filled"
+                                        />
+                                    )}
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <TextField
