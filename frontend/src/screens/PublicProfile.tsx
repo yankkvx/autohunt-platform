@@ -29,7 +29,9 @@ import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
+import BusinessIcon from "@mui/icons-material/Business";
 import AdCard from "../components/ListingsScreen/AdCard";
+import LocationMap from "../components/LocationMap";
 
 interface PublicProfile {
     id: number;
@@ -46,6 +48,13 @@ interface PublicProfile {
     telegram?: string;
     instagram?: string;
     twitter: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    country_code?: string;
+    postcode?: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 interface AdImage {
@@ -172,202 +181,239 @@ const PublicProfile = () => {
                                 <CircularProgress size={80} />
                             </Box>
                         ) : (
-                            <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                                <Box
-                                    display="flex"
-                                    flexDirection={{
-                                        xs: "column",
-                                        lg: "row",
-                                    }}
-                                    alignItems="center"
-                                    gap={3}
-                                    mb={3}
+                            <>
+                                <Paper
+                                    elevation={2}
+                                    sx={{ p: 3, borderRadius: 2 }}
                                 >
-                                    <Avatar
-                                        src={user?.profile_image}
-                                        sx={{
-                                            width: 160,
-                                            height: 160,
-                                            border: "4px solid #e0e0e0",
-                                        }}
-                                        alt={user?.email}
-                                    />
                                     <Box
-                                        flex={1}
-                                        sx={{
-                                            minWidth: 0,
-                                            wordBreak: "break-word",
-                                            overflowWrap: "anywhere",
-                                            textAlign: {
-                                                xs: "center",
-                                                sm: "left",
-                                            },
+                                        display="flex"
+                                        flexDirection={{
+                                            xs: "column",
+                                            lg: "row",
                                         }}
+                                        alignItems="center"
+                                        gap={3}
+                                        mb={3}
                                     >
-                                        <Typography
-                                            variant="h5"
-                                            fontWeight={700}
-                                        >
-                                            {user?.first_name} {user?.last_name}
-                                        </Typography>
-                                        <Typography
-                                            variant="subtitle2"
-                                            color="text.secondary"
-                                        >
-                                            {user?.account_type
-                                                ? user.account_type[0].toUpperCase() +
-                                                  user.account_type.slice(1)
-                                                : ""}
-                                        </Typography>
-                                        {user?.company_name && (
-                                            <Typography fontWeight={500}>
-                                                {user.company_name}
-                                            </Typography>
-                                        )}
-                                        {user?.company_website && (
-                                            <Typography
-                                                component={Link}
-                                                color="primary"
-                                                sx={{
-                                                    textDecoration: "none",
-                                                }}
-                                                href={user.company_website}
-                                            >
-                                                {user.company_website
-                                                    .replace(/^https?:\/\//, "")
-                                                    .replace(/\$/, "")}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                </Box>
-                                <Divider sx={{ my: 2 }} />
-
-                                <Box
-                                    display="flex"
-                                    flexDirection="column"
-                                    gap={2}
-                                >
-                                    <Typography
-                                        component={Link}
-                                        href={`mailto:${user?.email}`}
-                                        sx={{
-                                            display: "flex",
-                                            gap: 1,
-                                            alignItems: "center",
-                                            textDecoration: "none",
-                                            color: "text.primary",
-                                            "&:hover": {
-                                                color: "primary.main",
-                                            },
-                                        }}
-                                    >
-                                        <EmailIcon fontSize="small" />
-                                        {user?.email}
-                                    </Typography>
-
-                                    <Typography
-                                        component={Link}
-                                        href={`tel:${user?.phone_number}`}
-                                        sx={{
-                                            display: "flex",
-                                            gap: 1,
-                                            alignItems: "center",
-                                            textDecoration: "none",
-                                            color: "text.primary",
-                                            "&:hover": {
-                                                color: "primary.main",
-                                            },
-                                        }}
-                                    >
-                                        <LocalPhoneIcon fontSize="small" />
-                                        {user?.phone_number}
-                                    </Typography>
-                                    {(user?.telegram ||
-                                        user?.twitter ||
-                                        user?.instagram) && (
-                                        <Box
+                                        <Avatar
+                                            src={user?.profile_image}
                                             sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
+                                                width: 160,
+                                                height: 160,
+                                                border: "4px solid #e0e0e0",
+                                            }}
+                                            alt={user?.email}
+                                        />
+                                        <Box
+                                            flex={1}
+                                            sx={{
+                                                minWidth: 0,
+                                                wordBreak: "break-word",
+                                                overflowWrap: "anywhere",
+                                                textAlign: {
+                                                    xs: "center",
+                                                    sm: "left",
+                                                },
                                             }}
                                         >
-                                            {user?.telegram && (
-                                                <IconButton
-                                                    component={Link}
-                                                    href={user.telegram}
-                                                    target="_blank"
-                                                    sx={{
-                                                        p: 0,
-                                                        color: "text.primary",
-                                                        "&:hover": {
-                                                            color: "primary.main",
-                                                        },
-                                                    }}
-                                                >
-                                                    <TelegramIcon />
-                                                </IconButton>
+                                            <Typography
+                                                variant="h5"
+                                                fontWeight={700}
+                                            >
+                                                {user?.first_name}{" "}
+                                                {user?.last_name}
+                                            </Typography>
+                                            <Typography
+                                                variant="subtitle2"
+                                                color="text.secondary"
+                                            >
+                                                {user?.account_type
+                                                    ? user.account_type[0].toUpperCase() +
+                                                      user.account_type.slice(1)
+                                                    : ""}
+                                            </Typography>
+                                            {user?.company_name && (
+                                                <Typography fontWeight={500}>
+                                                    {user.company_name}
+                                                </Typography>
                                             )}
-                                            {user?.twitter && (
-                                                <IconButton
+                                            {user?.company_website && (
+                                                <Typography
                                                     component={Link}
-                                                    href={user.twitter}
-                                                    target="_blank"
+                                                    color="primary"
                                                     sx={{
-                                                        p: 0,
-                                                        color: "text.primary",
-                                                        "&:hover": {
-                                                            color: "primary.main",
-                                                        },
+                                                        textDecoration: "none",
                                                     }}
+                                                    href={user.company_website}
                                                 >
-                                                    <TwitterIcon />
-                                                </IconButton>
-                                            )}
-                                            {user?.instagram && (
-                                                <IconButton
-                                                    component={Link}
-                                                    href={user.instagram}
-                                                    target="_blank"
-                                                    sx={{
-                                                        p: 0,
-                                                        color: "text.primary",
-                                                        "&:hover": {
-                                                            color: "primary.main",
-                                                        },
-                                                    }}
-                                                >
-                                                    <InstagramIcon />
-                                                </IconButton>
+                                                    {user.company_website
+                                                        .replace(
+                                                            /^https?:\/\//,
+                                                            ""
+                                                        )
+                                                        .replace(/\$/, "")}
+                                                </Typography>
                                             )}
                                         </Box>
-                                    )}
-                                </Box>
-                                {user?.about && (
-                                    <Box mt={2}>
-                                        <Typography variant="h6" mb={1}>
-                                            About
-                                        </Typography>
+                                    </Box>
+                                    <Divider sx={{ my: 2 }} />
+
+                                    <Box
+                                        display="flex"
+                                        flexDirection="column"
+                                        gap={2}
+                                    >
                                         <Typography
-                                            color="text.secondary"
-                                            textAlign="justify"
+                                            component={Link}
+                                            href={`mailto:${user?.email}`}
+                                            sx={{
+                                                display: "flex",
+                                                gap: 1,
+                                                alignItems: "center",
+                                                textDecoration: "none",
+                                                color: "text.primary",
+                                                "&:hover": {
+                                                    color: "primary.main",
+                                                },
+                                            }}
                                         >
-                                            {user.about}
+                                            <EmailIcon fontSize="small" />
+                                            {user?.email}
                                         </Typography>
-                                    </Box>
-                                )}
-                                {isOwnerProfile && (
-                                    <Box mt={2}>
-                                        <Button
-                                            variant="outlined"
-                                            fullWidth
-                                            onClick={() => navigate("/profile")}
+
+                                        <Typography
+                                            component={Link}
+                                            href={`tel:${user?.phone_number}`}
+                                            sx={{
+                                                display: "flex",
+                                                gap: 1,
+                                                alignItems: "center",
+                                                textDecoration: "none",
+                                                color: "text.primary",
+                                                "&:hover": {
+                                                    color: "primary.main",
+                                                },
+                                            }}
                                         >
-                                            Edit Profile
-                                        </Button>
+                                            <LocalPhoneIcon fontSize="small" />
+                                            {user?.phone_number}
+                                        </Typography>
+                                        {(user?.telegram ||
+                                            user?.twitter ||
+                                            user?.instagram) && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                {user?.telegram && (
+                                                    <IconButton
+                                                        component={Link}
+                                                        href={user.telegram}
+                                                        target="_blank"
+                                                        sx={{
+                                                            p: 0,
+                                                            color: "text.primary",
+                                                            "&:hover": {
+                                                                color: "primary.main",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <TelegramIcon />
+                                                    </IconButton>
+                                                )}
+                                                {user?.twitter && (
+                                                    <IconButton
+                                                        component={Link}
+                                                        href={user.twitter}
+                                                        target="_blank"
+                                                        sx={{
+                                                            p: 0,
+                                                            color: "text.primary",
+                                                            "&:hover": {
+                                                                color: "primary.main",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <TwitterIcon />
+                                                    </IconButton>
+                                                )}
+                                                {user?.instagram && (
+                                                    <IconButton
+                                                        component={Link}
+                                                        href={user.instagram}
+                                                        target="_blank"
+                                                        sx={{
+                                                            p: 0,
+                                                            color: "text.primary",
+                                                            "&:hover": {
+                                                                color: "primary.main",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <InstagramIcon />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
+                                        )}
                                     </Box>
+                                    {user?.about && (
+                                        <Box mt={2}>
+                                            <Typography variant="h6" mb={1}>
+                                                About
+                                            </Typography>
+                                            <Typography
+                                                color="text.secondary"
+                                                textAlign="justify"
+                                            >
+                                                {user.about}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    {isOwnerProfile && (
+                                        <Box mt={2}>
+                                            <Button
+                                                variant="outlined"
+                                                fullWidth
+                                                onClick={() =>
+                                                    navigate("/profile")
+                                                }
+                                            >
+                                                Edit Profile
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Paper>
+                                {user?.account_type === "company" && (
+                                    <Paper
+                                        elevation={2}
+                                        sx={{ p: 3, borderRadius: 2, mt: 2 }}
+                                    >
+                                        <Box sx={{ mb: 2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <BusinessIcon fontSize="small" />
+                                                Office Location
+                                            </Typography>
+                                        </Box>
+                                        <LocationMap
+                                            height={240}
+                                            latitude={user?.latitude}
+                                            longitude={user?.longitude}
+                                            locationName={user?.company_office}
+                                        />
+                                    </Paper>
                                 )}
-                            </Paper>
+                            </>
                         )}
                     </Grid>
 
