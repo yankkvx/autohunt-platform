@@ -25,9 +25,16 @@ interface LocationOptions {
 interface LocationInputProps {
     formik: any;
     selectStyles: any;
+    fieldName?: string;
+    label?: string;
 }
 
-const LocationInput = ({ formik, selectStyles }: LocationInputProps) => {
+const LocationInput = ({
+    formik,
+    selectStyles,
+    fieldName = "location",
+    label,
+}: LocationInputProps) => {
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -72,7 +79,7 @@ const LocationInput = ({ formik, selectStyles }: LocationInputProps) => {
 
     const handleChange = (selected: any) => {
         if (!selected) {
-            formik.setFieldValue("location", "");
+            formik.setFieldValue(fieldName, "");
             formik.setFieldValue("city", "");
             formik.setFieldValue("state", "");
             formik.setFieldValue("country", "");
@@ -84,7 +91,7 @@ const LocationInput = ({ formik, selectStyles }: LocationInputProps) => {
         }
 
         const loc = selected.value;
-        formik.setFieldValue("location", loc.display_name);
+        formik.setFieldValue(fieldName, loc.display_name);
         formik.setFieldValue(
             "city",
             loc.address.city || loc.address.town || loc.address.village || ""
@@ -93,8 +100,8 @@ const LocationInput = ({ formik, selectStyles }: LocationInputProps) => {
         formik.setFieldValue("country", loc.address.country || "");
         formik.setFieldValue("country_code", loc.address.country_code || "");
         formik.setFieldValue("postcode", loc.address.postcode || "");
-        formik.setFieldValue("latitude", loc.latitude || "");
-        formik.setFieldValue("longitude", loc.longitude || "");
+        formik.setFieldValue("latitude", Number(loc.latitude).toFixed(6));
+        formik.setFieldValue("longitude", Number(loc.longitude).toFixed(6));
     };
 
     const formatOptionLabel = (option: LocationOptions) => (
@@ -124,17 +131,28 @@ const LocationInput = ({ formik, selectStyles }: LocationInputProps) => {
     const menuPortalTarget =
         typeof document !== "undefined" ? document.body : null;
 
+    const currentValue = formik.values[fieldName];
+
+    const displayName =
+        label ||
+        (fieldName === "company_office" ? "Company Office" : "Location");
+
     return (
         <>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-                Location
-            </Typography>
+            {fieldName != "company_office" && (
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                    {displayName}
+                </Typography>
+            )}
             <AsyncSelect<LocationOptions>
                 cacheOptions
                 defaultOptions
                 value={
-                    formik.values.location
-                        ? { label: formik.values.location, value: null as any }
+                    currentValue
+                        ? {
+                              label: currentValue,
+                              value: null as any,
+                          }
                         : null
                 }
                 loadOptions={loadOptions}
@@ -151,13 +169,13 @@ const LocationInput = ({ formik, selectStyles }: LocationInputProps) => {
                 styles={enhancedStyles}
                 menuPortalTarget={menuPortalTarget}
             />
-            {formik.touched.location && formik.errors.location && (
+            {formik.touched[fieldName] && formik.errors[fieldName] && (
                 <Typography
                     variant="caption"
                     color="error"
                     sx={{ mt: 0.5, ml: 1.5 }}
                 >
-                    {formik.error.location}
+                    {formik.errors[fieldName]}
                 </Typography>
             )}
         </>
