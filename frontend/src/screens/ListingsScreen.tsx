@@ -33,6 +33,13 @@ const ListingsScreen = () => {
     const totalPages = Math.ceil(count / pageSize);
 
     useEffect(() => {
+        if (location.state?.filters) {
+            setFilters(location.state.filters);
+            setPage(1);
+        }
+    }, [location.state?.timestamp]);
+
+    useEffect(() => {
         dispatch(fetchAds({ page: page || 1, filters }));
     }, [dispatch, page, filters]);
 

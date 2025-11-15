@@ -16,6 +16,7 @@ import ColorModeToggle from "../ColorMode/ColorModeToggle";
 import HeaderDrawer from "./HeaderDrawer";
 import { useAuthServiceContext } from "../../context/AuthContext";
 import UserMenu from "./UserMenu";
+import SearchInput from "./SearchInput";
 
 const Header = () => {
     const theme = useTheme();
@@ -42,7 +43,14 @@ const Header = () => {
                         px: { xs: 1, sm: 2, md: 3 },
                     }}
                 >
-                    <Box sx={{ px: { xs: 1, sm: 2 } }}>
+                    <Box
+                        sx={{
+                            px: { xs: 1, sm: 2 },
+                            display: "flex",
+                            alignItems: "center",
+                            width: { md: "560px" },
+                        }}
+                    >
                         <Link
                             component={LinkRouter}
                             to="/"
@@ -68,7 +76,18 @@ const Header = () => {
                                 <DirectionsCar sx={{ mr: 0.2 }} /> AutoHunt
                             </Typography>
                         </Link>
+                        <Box
+                            sx={{
+                                display: { xs: "none", md: "flex" },
+                                flexGrow: 1,
+                                maxWidth: 400,
+                                mx: 2,
+                            }}
+                        >
+                            <SearchInput />
+                        </Box>
                     </Box>
+
                     <Box
                         sx={{
                             display: { xs: "none", sm: "flex" },

@@ -18,6 +18,7 @@ import { Link as LinkRouter } from "react-router-dom";
 import { useAuthServiceContext } from "../../context/AuthContext";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { logout } from "../../store/slices/authSlice";
+import SearchInput from "./SearchInput";
 
 type HeaderDrawerProps = {
     open: boolean;
@@ -211,6 +212,10 @@ const HeaderDrawer = ({ open, onClose }: HeaderDrawerProps) => {
                         )}
 
                         <List sx={{ width: "100%" }}>
+                            <ListItem sx={{ px: 2, py: 1 }}>
+                                <SearchInput onMobileClose={onClose} />
+                            </ListItem>
+                            <Divider sx={{ my: 1.5 }} />
                             <ListItem
                                 component={LinkRouter}
                                 to="/ads"
