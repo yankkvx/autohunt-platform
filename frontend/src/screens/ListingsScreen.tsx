@@ -403,22 +403,21 @@ const ListingsScreen = () => {
 
     const [filters, setFilters] = useState({});
     const hasFetched = useRef(false);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const pageSize = 16;
     const totalPages = Math.ceil(count / pageSize);
 
     // When catalog loads first time initialize filters from url or navigation state
     useEffect(() => {
-        if (
-            catalogState.brands.length > 0 &&
-            Object.keys(filters).length === 0
-        ) {
+        if (catalogState.brands.length > 0 && !isInitialized) {
             const initialFilters =
                 location.state?.filters ||
                 parseFiltersFromURL(searchParams, catalogState);
             setFilters(initialFilters);
+            setIsInitialized(true);
         }
-    }, [catalogState.brands.length]);
+    }, [catalogState.brands.length, isInitialized]);
 
     // If coming from homescreen or another page with filters in state
     useEffect(() => {
@@ -433,11 +432,7 @@ const ListingsScreen = () => {
 
     // Synchronize filters with url
     useEffect(() => {
-        if (
-            catalogState.brands.length === 0 ||
-            Object.keys(filters).length === 0
-        )
-            return;
+        if (catalogState.brands.length === 0 || !isInitialized) return;
 
         const params = filtersToURLParams(filters, catalogState);
         params.set("page", page.toString());
@@ -447,12 +442,11 @@ const ListingsScreen = () => {
         if (location.search !== newSearch) {
             navigate(newSearch, { replace: true });
         }
-    }, [filters, page, catalogState.brands.length]);
+    }, [filters, page, catalogState.brands.length, isInitialized]);
 
     // Fetch ads when filters or page changes
     useEffect(() => {
-        if (catalogState.brands.length === 0) return;
-        if (Object.keys(filters).length === 0) return;
+        if (catalogState.brands.length === 0 || !isInitialized) return;
 
         hasFetched.current = false;
 
@@ -460,7 +454,7 @@ const ListingsScreen = () => {
             hasFetched.current = true;
             dispatch(fetchAds({ page, filters }));
         }
-    }, [dispatch, page, filters, catalogState.brands.length]);
+    }, [dispatch, page, filters, catalogState.brands.length, isInitialized]);
 
     useEffect(() => {
         if (user) {
