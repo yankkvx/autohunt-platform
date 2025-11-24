@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import MyTokenObtainPairView, RegisterView, UserManagement, AdminUserManagement, AdminToggleActive, AdminToggleStaff, PublicProfie
+from .oauth_views import google_auth
 
 urlpatterns = [
     path('login/', MyTokenObtainPairView.as_view(), name='token-obtain-pair'),
@@ -13,4 +14,6 @@ urlpatterns = [
     path('admin/users/<int:pk>/toggle-staff/',
          AdminToggleStaff.as_view(), name='admin-toggle-staff'),
     path('profile/<int:pk>/', PublicProfie.as_view(), name='public-profile'),
+
+    path('auth/google/', google_auth, name='google-auth')
 ]
