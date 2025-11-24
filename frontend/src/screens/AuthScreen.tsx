@@ -5,6 +5,7 @@ import {
     Typography,
     MenuItem,
     Alert,
+    Divider,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -14,11 +15,15 @@ import {
     type RegisterUser,
     type LoginUser,
     clearError,
+    type GoogleAuthData,
+    googleAuth,
 } from "../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import * as Yup from "yup";
+import GoogleOAuthButton from "../components/GoogleAuth/oAuthButton";
+import GoogleAccTypeModal from "../components/GoogleAuth/GoogleAccTypeModal";
 
 const loginValidationSchema = Yup.object({
     email: Yup.string()
@@ -52,6 +57,11 @@ const registerValidationSchema = Yup.object({
 
 const AuthScreen = () => {
     const [isLogin, setIsLogin] = useState(true);
+    const [googleModalOpen, setGoogleModalOpen] = useState(false);
+    const [pendingGoogleCredential, setPendingGoogleCredential] = useState<
+        string | null
+    >();
+    const [pendingUserInfo, setPendingUserInfo] = useState<any>(null);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { loading, error } = useAppSelector((state) => state.auth);
@@ -119,6 +129,69 @@ const AuthScreen = () => {
         },
     });
 
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        const credential = credentialResponse.credential;
+
+        const authData: GoogleAuthData = {
+            credential: credential,
+        };
+
+        if (!isLogin && registerFormik.values.account_type) {
+            authData.account_type = registerFormik.values.account_type;
+            if (
+                registerFormik.values.account_type === "company" &&
+                registerFormik.values.company_name
+            ) {
+                authData.company_name = registerFormik.values.company_name;
+            }
+        }
+        const result = await dispatch(googleAuth(authData));
+
+        if (googleAuth.fulfilled.match(result)) {
+            navigate("/");
+        } else if (googleAuth.rejected.match(result)) {
+            const errorPayload = result.payload as any;
+
+            if (errorPayload?.type === "REGISTRATION_REQUIRED") {
+                setPendingGoogleCredential(credential);
+                setPendingUserInfo(errorPayload.data.user_info);
+                setGoogleModalOpen(true);
+            }
+        }
+    };
+
+    const handleGoogleError = () => {
+        console.error("Google OAuth error");
+    };
+
+    const handleGoogleModalSubmit = async (data: {
+        account_type: "private" | "company";
+        company_name?: string;
+    }) => {
+        if (!pendingGoogleCredential) return;
+
+        const result = await dispatch(
+            googleAuth({
+                credential: pendingGoogleCredential,
+                account_type: data.account_type,
+                company_name: data.company_name,
+            })
+        );
+        if (googleAuth.fulfilled.match(result)) {
+            setGoogleModalOpen(false);
+            setPendingGoogleCredential(null);
+            setPendingUserInfo(null);
+            navigate("/profile");
+        }
+    };
+
+    const handleGoogleModalClose = () => {
+        setGoogleModalOpen(false);
+        setPendingUserInfo(null);
+        setPendingGoogleCredential(null);
+        setPendingUserInfo(null);
+    };
+
     return (
         <MainLayout>
             <Box
@@ -148,6 +221,7 @@ const AuthScreen = () => {
                         ? "Enter your credentials"
                         : "Fill in your details below"}
                 </Typography>
+
                 {isLogin && (
                     <Box component="form" onSubmit={loginFormik.handleSubmit}>
                         <TextField
@@ -374,6 +448,19 @@ const AuthScreen = () => {
                         {renderError()}
                     </Box>
                 )}
+
+                <Box>
+                    <Divider sx={{ my: 3 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            OR
+                        </Typography>
+                    </Divider>
+                    <GoogleOAuthButton
+                        mode="login"
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                    />
+                </Box>
             </Box>
 
             <Typography align="center" mt={2}>
@@ -382,6 +469,13 @@ const AuthScreen = () => {
                     {isLogin ? "Sign Up" : "Sign In"}
                 </Button>
             </Typography>
+
+            <GoogleAccTypeModal
+                open={googleModalOpen}
+                onClose={handleGoogleModalClose}
+                onSubmit={handleGoogleModalSubmit}
+                loading={loading}
+            />
         </MainLayout>
     );
 };
