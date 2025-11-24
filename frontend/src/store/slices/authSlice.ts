@@ -19,6 +19,7 @@ export interface User {
     twitter?: string;
     access?: string;
     refresh?: string;
+    token?: string;
     is_active: boolean;
     is_staff: boolean;
 }
@@ -37,6 +38,27 @@ export interface RegisterUser {
 export interface LoginUser {
     email: string;
     password: string;
+}
+
+export interface GoogleAuthData {
+    credential: string;
+    account_type?: "private" | "company";
+    company_name?: string;
+}
+
+export interface GoogleUserInfo {
+    email: string;
+    first_name: string;
+    last_name: string;
+    profile_image?: string;
+}
+
+interface RegistrationRequiredError {
+    type: "REGISTRATION_REQUIRED";
+    data: {
+        detail: string;
+        user_info: GoogleUserInfo;
+    };
 }
 
 export interface UpdateUserData extends Partial<Omit<User, "profile_image">> {
@@ -108,6 +130,30 @@ export const loginUser = createAsyncThunk(
                 return rejectWithValue(formatErrors(err.response.data));
             }
             return rejectWithValue("Login failed.");
+        }
+    }
+);
+
+export const googleAuth = createAsyncThunk(
+    "auth/googleAuth",
+    async (authData: GoogleAuthData, { rejectWithValue }) => {
+        try {
+            const response = await axios.post(
+                `${MAIN_URL}/auth/google/`,
+                authData
+            );
+            return response.data;
+        } catch (err: any) {
+            if (err.response?.status === 400 && err.response.data.user_info) {
+                return rejectWithValue({
+                    type: "REGISTRATION_REQUIRED",
+                    data: err.response.data,
+                } as RegistrationRequiredError);
+            }
+            if (err.response?.data) {
+                return rejectWithValue(formatErrors(err.response.data));
+            }
+            return rejectWithValue("Google authentication failed.");
         }
     }
 );
@@ -249,6 +295,32 @@ const authSlice = createSlice({
                 state.error = action.payload as
                     | string
                     | Record<string, string[]>;
+            })
+
+            // Google auth
+            .addCase(googleAuth.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(googleAuth.fulfilled, (state, action) => {
+                state.loading = false;
+                const userData = {
+                    ...action.payload,
+                    access: action.payload.token || action.payload.access,
+                    refresh: action.payload.refresh,
+                };
+                state.user = userData;
+                localStorage.setItem("user", JSON.stringify(userData));
+            })
+            .addCase(googleAuth.rejected, (state, action) => {
+                state.loading = false;
+                const errorPayload = action.payload as any;
+                if (
+                    !errorPayload?.type ||
+                    errorPayload.type !== "REGISTRATION_REQUIRED"
+                ) {
+                    state.error = errorPayload as string;
+                }
             })
 
             // Fetch current user
