@@ -13,7 +13,7 @@ class User(AbstractUser):
     account_type = models.CharField(
         max_length=10, choices=ACCOUNT_TYPES, default=ACCOUNT_PRIVATE)
     email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=30, unique=True)
+    phone_number = models.CharField(max_length=30, unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=25)
     about = models.TextField(max_length=250, null=True, blank=True)
