@@ -1,4 +1,12 @@
-import { Box, Container, Grid, Button, Collapse } from "@mui/material";
+import {
+    Box,
+    Container,
+    Grid,
+    Button,
+    Collapse,
+    Paper,
+    CircularProgress,
+} from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchCatalog } from "../../store/slices/catalogSlice";
@@ -143,13 +151,24 @@ const FilterSection = () => {
         navigate("/ads", { state: { filters } });
     };
 
-    if (loading) return <p>Loading...</p>;
+    if (loading)
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "30vh",
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box
+            <Paper
                 sx={{
-                    bgcolor: "background.paper",
                     p: 3,
                     borderRadius: 3,
                     boxShadow: 2,
@@ -158,7 +177,7 @@ const FilterSection = () => {
                 {/* Select Options */}
                 <Grid container spacing={2} justifyContent="center">
                     {/* Brand */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Select
                             options={brandOptions}
                             value={filters.brand}
@@ -169,7 +188,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Model */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Select
                             options={modelOptions}
                             value={filters.model}
@@ -181,7 +200,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Year from */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <CreatableSelect
                             options={years}
                             value={filters.yearFrom}
@@ -195,7 +214,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Year to */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <CreatableSelect
                             options={years}
                             value={filters.yearTo}
@@ -207,7 +226,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Mileage from */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <CreatableSelect
                             options={mileages}
                             value={filters.mileageFrom}
@@ -221,7 +240,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Mileage to */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <CreatableSelect
                             options={mileages}
                             value={filters.mileageTo}
@@ -235,7 +254,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Transmission */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Select
                             options={transmissionOptions}
                             value={filters.transmission?.map((t: string) =>
@@ -253,7 +272,7 @@ const FilterSection = () => {
                     </Grid>
 
                     {/* Fuel type */}
-                    <Grid component="div">
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Select
                             options={fuelTypeOptions}
                             value={filters.fuelType}
@@ -269,7 +288,7 @@ const FilterSection = () => {
                             {isElectricOrHybrid ? (
                                 <>
                                     {/* Battery power  from*/}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={batteryPowers}
                                             value={filters.batteryPowerFrom}
@@ -287,7 +306,7 @@ const FilterSection = () => {
                                     </Grid>
 
                                     {/* Battery power to */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={batteryPowers}
                                             value={filters.batteryPowerTo}
@@ -305,7 +324,7 @@ const FilterSection = () => {
                                     </Grid>
 
                                     {/* Battery capacity from */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={batteryCapacities}
                                             value={filters.batteryCapacityFrom}
@@ -323,7 +342,7 @@ const FilterSection = () => {
                                     </Grid>
 
                                     {/* Battery capacity to */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={batteryCapacities}
                                             value={filters.batteryCapacityTo}
@@ -343,7 +362,7 @@ const FilterSection = () => {
                             ) : (
                                 <>
                                     {/* Power from */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={powers}
                                             value={filters.powerFrom}
@@ -358,7 +377,7 @@ const FilterSection = () => {
                                     </Grid>
 
                                     {/* Power to */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={powers}
                                             value={filters.powerTo}
@@ -373,7 +392,7 @@ const FilterSection = () => {
                                     </Grid>
 
                                     {/* Capacity from */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={capacities}
                                             value={filters.capacityFrom}
@@ -391,7 +410,7 @@ const FilterSection = () => {
                                     </Grid>
 
                                     {/* Capacity to */}
-                                    <Grid component="div">
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <CreatableSelect
                                             options={capacities}
                                             value={filters.capacityTo}
@@ -411,7 +430,7 @@ const FilterSection = () => {
                             )}
 
                             {/* Price from */}
-                            <Grid component="div">
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                 <CreatableSelect
                                     options={prices}
                                     value={filters.priceFrom}
@@ -425,7 +444,7 @@ const FilterSection = () => {
                             </Grid>
 
                             {/* Price to */}
-                            <Grid component="div">
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                 <CreatableSelect
                                     options={prices}
                                     value={filters.priceTo}
@@ -439,7 +458,7 @@ const FilterSection = () => {
                             </Grid>
 
                             {/* Body type */}
-                            <Grid component="div">
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                 <Select
                                     options={bodyTypeOptions}
                                     value={filters.bodyType?.map((b: string) =>
@@ -458,7 +477,7 @@ const FilterSection = () => {
                             </Grid>
 
                             {/* Drive type */}
-                            <Grid component="div">
+                            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                 <Select
                                     options={driveTypeOptions}
                                     value={filters.driveType?.map((d: string) =>
@@ -512,7 +531,7 @@ const FilterSection = () => {
                         Search
                     </Button>
                 </Box>
-            </Box>
+            </Paper>
         </Container>
     );
 };
