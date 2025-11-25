@@ -7,6 +7,8 @@ import {
     Typography,
     Button,
     Chip,
+    CircularProgress,
+    Alert,
 } from "@mui/material";
 import { Link as LinkRouter } from "react-router-dom";
 import Slider from "react-slick";
@@ -58,8 +60,32 @@ const LatestAdsSection = () => {
         ],
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
+    if (loading)
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "60vh",
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+
+    if (error)
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <Alert severity="error">{error}</Alert>
+            </Box>
+        );
 
     return (
         <Container maxWidth="lg" sx={{ p: 3 }}>

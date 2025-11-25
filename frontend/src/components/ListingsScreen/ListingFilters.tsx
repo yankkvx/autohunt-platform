@@ -6,6 +6,8 @@ import {
     Checkbox,
     FormControlLabel,
     FormGroup,
+    Paper,
+    CircularProgress,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -164,13 +166,24 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
         label: c.label,
     }));
 
-    if (loading) return <p>Loading...</p>;
+    if (loading)
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "30vh",
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box
+            <Paper
                 sx={{
-                    bgcolor: "background.paper",
                     p: 3,
                     borderRadius: 3,
                     boxShadow: 2,
@@ -596,7 +609,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                         {showMore ? "Hide Filters" : "More Filters"}
                     </Button>
                 </Box>
-            </Box>
+            </Paper>
         </Container>
     );
 };
