@@ -115,16 +115,17 @@ const LocationInput = ({
 
     const enhancedStyles = {
         ...selectStyles,
-        control: (base: any) => ({
-            ...base,
+        control: (base: any, state: any) => ({
+            ...selectStyles.control(base, state),
             minHeight: 56,
+            width: "100%",
         }),
-        option: (base: any) => ({
-            ...base,
+        option: (base: any, state: any) => ({
+            ...selectStyles.option(base, state),
             fontWeight: "normal",
         }),
-        singleValue: (base: any) => ({
-            ...base,
+        singleValue: (base: any, state: any) => ({
+            ...selectStyles.singleValue(base, state),
             fontWeight: "normal",
         }),
     };

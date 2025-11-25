@@ -31,6 +31,7 @@ import BasicInfoStep from "../components/CreationSteps/BasicInfoStep";
 import SpecificationsStep from "../components/CreationSteps/SpecificationsStep";
 import AdditionalInfoStep from "../components/CreationSteps/AdditionalInfoStep";
 import PhotoStep from "../components/CreationSteps/PhotoStep";
+import { useSelectStyles } from "../styles/useSelectStyles";
 
 const steps = ["Basic Info", "Specifications", "Additional", "Photos"];
 
@@ -313,11 +314,15 @@ const CreateAdScreen = () => {
         formik.handleSubmit();
     };
 
+    const baseSelectStyles = useSelectStyles();
+
     const selectStyles = {
-        control: (base: any) => ({
-            ...base,
+        ...baseSelectStyles,
+        control: (base: any, state: any) => ({
+            ...baseSelectStyles.control(base, state),
             minHeight: 56,
             borderColor: "#c4c4c4",
+            width: "100%",
         }),
         menuPortal: (base: any) => ({ ...base, zIndex: 1400 }),
     };
