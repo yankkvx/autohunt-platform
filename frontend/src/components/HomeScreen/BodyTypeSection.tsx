@@ -1,45 +1,46 @@
 import { Box, Container, Grid, Link, Typography } from "@mui/material";
+import { Link as LinkRouter } from "react-router-dom";
 
 const cars = [
     {
         title: "Sedan",
         img: "images/Sedan.png",
-        link: "/ads/bodyType=sedan",
+        link: "/ads?body_type=Sedan",
     },
     {
         title: "SUV",
         img: "images/SUV.png",
-        link: "/ads/bodyType=suv",
+        link: "/ads?body_type=SUV",
     },
     {
         title: "Hatchback",
         img: "images/Hatchback.png",
-        link: "/ads/bodyType=hatchback",
+        link: "ads?body_type=Hatchback",
     },
     {
         title: "Coupe",
         img: "images/Coupe.png",
-        link: "/ads/bodyType=coupe",
+        link: "/ads?body_type=Coupe",
     },
     {
         title: "Cabrio",
         img: "images/Cabrio.png",
-        link: "/ads/bodyType=cabrio",
+        link: "/ads?body_type=Cabriolet",
     },
     {
         title: "Wagon",
         img: "images/Wagon.png",
-        link: "/ads/bodyType=wagon",
+        link: "/ads?body_type=Wagon",
     },
     {
         title: "Van",
         img: "images/Van.png",
-        link: "/ads/bodyType=van",
+        link: "/ads?body_type=Van",
     },
     {
         title: "Pick Up",
         img: "images/PickUp.png",
-        link: "/ads/bodyType=pickup",
+        link: "/ads?body_type=Pickup",
     },
 ];
 
@@ -54,7 +55,11 @@ const BodyTypeSection = () => {
             >
                 {cars.map((car) => (
                     <Grid key={car.title} component="div">
-                        <Link href={car.link} underline="none">
+                        <Link
+                            component={LinkRouter}
+                            to={car.link}
+                            underline="none"
+                        >
                             <Box
                                 sx={{
                                     pt: 3,
