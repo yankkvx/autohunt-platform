@@ -3,12 +3,7 @@ import { useMediaQuery } from "@mui/material";
 
 export const useSelectStyles = () => {
     const theme = useTheme();
-    const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-    const isMd = useMediaQuery(theme.breakpoints.between("sm", "lg"));
 
-    let selectWidth = "13vw";
-    if (isMd) selectWidth = "27vw";
-    if (isXs) selectWidth = "36vw";
     return {
         control: (provided: any, state: any) => ({
             ...provided,
@@ -16,6 +11,8 @@ export const useSelectStyles = () => {
                 ? theme.palette.mode === "light"
                     ? "#97979723"
                     : theme.palette.action.disabledBackground
+                : theme.palette.mode === "dark"
+                ? "#232323"
                 : theme.palette.background.paper,
             color: theme.palette.text.primary,
             fontWeight: 500,
@@ -28,7 +25,7 @@ export const useSelectStyles = () => {
                 ? `0 0 0 1px ${theme.palette.info.main}`
                 : "none",
             "&:hover": { borderColor: theme.palette.info.main },
-            width: selectWidth,
+            width: "100%",
         }),
         valueContainer: (provided: any) => ({
             ...provided,
@@ -106,7 +103,11 @@ export const useListingSelectStyle = () => {
             height: 55,
             fontWeight: 500,
             backgroundColor: state.isDisabled
-                ? theme.palette.action.disabledBackground
+                ? theme.palette.mode === "light"
+                    ? "#97979723"
+                    : theme.palette.action.disabledBackground
+                : theme.palette.mode === "dark"
+                ? "#232323"
                 : theme.palette.background.paper,
             boxShadow: state.isFocused
                 ? `0 0 0 1px ${theme.palette.info.main}`
