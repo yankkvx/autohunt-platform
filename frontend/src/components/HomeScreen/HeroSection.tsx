@@ -59,7 +59,7 @@ const HeroSection = () => {
                     </Typography>
                     <Button
                         component={LinkRouter}
-                        to="/register"
+                        to="/login"
                         variant="contained"
                         color="secondary"
                         sx={{
