@@ -1,5 +1,5 @@
 import { CssBaseline, useMediaQuery } from "@mui/material";
-import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import React, {type ReactNode, useEffect, useMemo, useState } from "react";
 import createMuiTheme from "../../styles/theme";
 import { ThemeProvider } from "@emotion/react";
 import { ColorModeContext } from "../../context/DarkModeContext";
@@ -12,7 +12,7 @@ const ColorToggle: React.FC<ColorProps> = ({ children }) => {
     const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
     const storedMode = localStorage.getItem("colorMode") as "light" | "dark";
     const initialMode: "light" | "dark" =
-        storedMode || prefersDarkMode ? "dark" : "light";
+        storedMode || (prefersDarkMode ? "dark" : "light");
     const [mode, setMode] = useState<"light" | "dark">(initialMode);
 
     const toggleColorMode = React.useCallback(() => {
@@ -21,7 +21,7 @@ const ColorToggle: React.FC<ColorProps> = ({ children }) => {
 
     useEffect(() => {
         localStorage.setItem("colorMode", mode);
-    });
+    }, [mode]);
 
     const colorMode = useMemo(() => ({ toggleColorMode }), [toggleColorMode]);
     const theme = useMemo(() => createMuiTheme(mode), [mode]);
