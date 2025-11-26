@@ -140,15 +140,12 @@ class PublicProfie(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, pk):
-        try:
-            user = get_object_or_404(User, id=pk)
-            if not user.is_active:
-                return Response({'detail': 'This profile is not available.'}, status=status.HTTP_404_NOT_FOUND)
-            serializer = UserSerializer(
-                user, many=False, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'detail': 'Profile upload failed'}, status=status.HTTP_400_BAD_REQUEST)
+        user = get_object_or_404(User, id=pk)
+        if not user.is_active:
+            return Response({'detail': 'This profile is not available.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(
+            user, many=False, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class AdminUserManagement(APIView):
