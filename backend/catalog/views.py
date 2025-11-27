@@ -28,7 +28,7 @@ class BodyTypeViewSet(viewsets.ModelViewSet):
     queryset = BodyType.objects.all()
     serializer_class = BodyTypeSerializer
 
-    def get_pemissions(self):
+    def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
         return [IsAdminUser()]
