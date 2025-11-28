@@ -58,7 +58,8 @@ class AdSerializer(serializers.ModelSerializer):
     longitude = serializers.DecimalField(
         required=False, max_digits=9, decimal_places=6)
     full_address = serializers.CharField(required=False, allow_blank=True)
-    location = serializers.CharField(required=False, allow_blank=True)
+    location = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Ad
