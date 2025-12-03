@@ -8,7 +8,7 @@ from .models import SubscriptionPlan, UserSubscription
 from account.models import User as CustomerUser
 from django.utils import timezone
 from datetime import timedelta
-
+from .serializers import UserSubscriptionSerializer, RecentSubscriptionSerializer, SubscriptionStatsSerializer
 
 User = get_user_model()
 
@@ -588,3 +588,108 @@ class ValidatePurchaseViewTests(APITestCase):
         response = self.client.post(self.validate_url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class SubscriptionSerializersTests(TestCase):
+    """Test cases for subscription serializers"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@email.com',
+            username='test@email.com',
+            password='321qwerty',
+            first_name='Test',
+            last_name='User',
+            phone_number='+1234567890',
+            account_type='company',
+        )
+
+        self.plan = SubscriptionPlan.objects.create(
+            name='Test Plan',
+            description='Test description',
+            additional_ads=5,
+            price=Decimal('19.99'),
+            duration_days=30,
+            is_active=True
+        )
+
+        self.subscription = UserSubscription.objects.create(
+            user=self.user,
+            plan=self.plan,
+            plan_name=self.plan.name,
+            additional_ads=self.plan.additional_ads,
+            end_date=timezone.now()+timedelta(days=30),
+            amount_paid=self.plan.price,
+            is_active=True
+        )
+
+    def test_user_sub_serializer_includes_amount_paid(self):
+        # Test that UserSubscriptionSerializer inclides amount paid
+        serializer = UserSubscriptionSerializer(self.subscription)
+        data = serializer.data
+
+        self.assertIn('amount_paid', data)
+        self.assertEqual(str(data['amount_paid']), '19.99')
+
+    def test_recent_sub_serializer(self):
+        # Test RecentSubscriptionSerializer
+
+        serializer = RecentSubscriptionSerializer(self.subscription)
+        data = serializer.data
+
+        self.assertIn('user_email', data)
+        self.assertIn('plan_name', data)
+        self.assertIn('amount_paid', data)
+        self.assertEqual(data['user_email'], self.user.email)
+        self.assertEqual(data['plan_name'], self.plan.name)
+
+    def test_recent_sub_serializer_handles_none_amount(self):
+        # Test that RecentSubscriptionSerializer handles None for amount_paid
+
+        sub = UserSubscription.objects.create(
+            user=self.user,
+            plan=self.plan,
+            plan_name=self.plan.name,
+            additional_ads=self.plan.additional_ads,
+            end_date=timezone.now() + timedelta(days=30),
+            amount_paid=None,
+            is_active=True
+        )
+        serializer = RecentSubscriptionSerializer(sub)
+        data = serializer.data
+
+        self.assertEqual(data['amount_paid'], '0.00')
+
+    def test_subscription_stats_serializers(self):
+        # Test SubscriptionStatsSerializer structure
+
+        stats_data = {
+            'summary': {
+                'total_revenue': Decimal('19.99'),
+                'total_subscriptions': 1,
+                'active_subscriptions': 1,
+            },
+            'revenue_by_period': [
+                {'period': timezone.now(), 'revenue': Decimal('19.99'), 'count': 1}
+            ],
+            'revenue_by_plan': [
+                {'plan_name': 'Test Plan',
+                    'revenue': Decimal('19.99'), 'count': 1}
+            ],
+            'recent_subscriptions': [self.subscription]
+        }
+
+        serializer = SubscriptionStatsSerializer(stats_data)
+        data = serializer.data
+
+        self.assertIn('summary', data)
+        self.assertIn('revenue_by_period', data)
+        self.assertIn('revenue_by_plan', data)
+        self.assertIn('recent_subscriptions', data)
+
+        self.assertEqual(data['summary']['total_revenue'], '19.99')
+        self.assertEqual(data['summary']['total_subscriptions'], 1)
+        self.assertEqual(data['summary']['active_subscriptions'], 1)
+
+        self.assertEqual(data['revenue_by_period'][0]['revenue'], '19.99')
+        self.assertEqual(data['revenue_by_period'][0]['count'], 1)
