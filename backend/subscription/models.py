@@ -37,6 +37,8 @@ class UserSubscription(models.Model):
     paypal_order_id = models.CharField(max_length=255, blank=True, null=True)
     paypal_payer_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    amount_paid = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

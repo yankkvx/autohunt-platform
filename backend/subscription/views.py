@@ -6,10 +6,14 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from account.models import User
 from .models import SubscriptionPlan, UserSubscription
-from .serializers import SubscriptionPlanSerializer, UserSubscriptionSerializer, ActivateSubscriptionSerializer
+from .serializers import SubscriptionPlanSerializer, UserSubscriptionSerializer, ActivateSubscriptionSerializer, SubscriptionStatsSerializer
 from .utils import get_user_ad_stats
+from datetime import timedelta
+from decimal import Decimal
 
 
 class SubscriptionPlanViewSet(viewsets.ModelViewSet):
@@ -106,6 +110,7 @@ class UserSubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
                 end_date=timezone.now() + timezone.timedelta(days=plan.duration_days),
                 paypal_order_id=paypal_order_id,
                 paypal_payer_id=paypal_payer_id,
+                amount_paid=plan.price,
                 is_active=True
             )
 
@@ -136,3 +141,72 @@ class UserSubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
             active_subs, many=True).data
 
         return Response(stats)
+
+
+class SubscriptionStatsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        period = request.query_params.get('period', 'month')
+
+        all_subscriptions = UserSubscription.objects.all()
+
+        # Sum of all payments
+        total_revenue = all_subscriptions.aggregate(
+            total=Sum('amount_paid'))['total'] or Decimal('0.00')
+
+        # Total number of subscriptions
+        total_subscriptions = all_subscriptions.count()
+
+        # Nuber of currently active subscriptions
+        active_subscriptions = all_subscriptions.filter(
+            is_active=True, end_date__gt=timezone.now()).count()
+
+        # Choose how to group dates depending on the selected period
+        if period == 'day':
+            trunc_func = TruncDay
+            date_from = timezone.now() - timedelta(days=30)  # last 30 days
+        elif period == 'week':
+            trunc_func = TruncWeek
+            date_from = timezone.now() - timedelta(weeks=12)  # last 12 weeks
+        elif period == 'year':
+            trunc_func = TruncYear
+            date_from = timezone.now() - timedelta(days=365)  # last 365 days
+        else:
+            trunc_func = TruncMonth
+            date_from = timezone.now() - timedelta(days=365)
+
+        revenue_by_period = (
+            all_subscriptions
+            
+            .filter(created_at__gte=date_from) # Take subscriptions from selected time range
+            .annotate(period=trunc_func('created_at')) # Create new field period by truncating created_at
+            .values('period') # Keep only period field in the result
+            .annotate(revenue=Sum('amount_paid'), count=Count('id')) # For each period calculate sum of amoint_paid and number of subscriptions
+            .order_by('period') # Sort by period
+        )
+
+        revenue_by_plan = (
+            all_subscriptions
+            .values('plan_name') # Group by plan name
+            .annotate(revenue=Sum('amount_paid'), count=Count('id')) # For each plan name calculate total revenue and number of subscriptions
+            .order_by('-revenue') # Sort plans by revenue
+        )
+
+        # Last 10 subscriptions
+        recent_subscriptions = all_subscriptions.select_related(
+            'user', 'plan').order_by('-created_at')[:10]
+
+        stats_data = {
+            'summary': {
+                'total_revenue': str(total_revenue),
+                'total_subscriptions': total_subscriptions,
+                'active_subscriptions': active_subscriptions,
+            },
+            'revenue_by_period': list(revenue_by_period),
+            'revenue_by_plan': list(revenue_by_plan),
+            'recent_subscriptions': recent_subscriptions
+        }
+
+        serializer = SubscriptionStatsSerializer(stats_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
