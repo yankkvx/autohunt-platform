@@ -15,6 +15,40 @@ interface ModelItem extends CatalogItem {
     };
 }
 
+export interface SubscriptionStatsSummary {
+    total_revenue: string;
+    total_subscriptions: string;
+    active_subscriptions: number;
+}
+
+export interface RevenueByPeriod {
+    period: string;
+    revenue: string;
+    count: number;
+}
+
+export interface RevenueByPlan {
+    plan_name: string;
+    revenue: string;
+    count: number;
+}
+
+export interface RecentSubscription {
+    id: number;
+    user_email: string;
+    plan_name: string;
+    amount_paid: string;
+    created_at: string;
+    is_active: boolean;
+}
+
+export interface SubscriptionStatsResponse {
+    summary: SubscriptionStatsSummary;
+    revenue_by_period: RevenueByPeriod[];
+    revenue_by_plan: RevenueByPlan[];
+    recent_subscriptions: RecentSubscription[];
+}
+
 interface AdminState {
     users: User[];
     usersLoading: boolean;
@@ -28,6 +62,10 @@ interface AdminState {
 
     plansLoading: boolean;
     plansError: string | null;
+
+    subscriptionStats: SubscriptionStatsResponse | null;
+    subscriptionStatsLoading: boolean;
+    subscriptionStatsError: string | null;
 }
 
 const initialState: AdminState = {
@@ -40,6 +78,9 @@ const initialState: AdminState = {
     actionError: null,
     plansLoading: false,
     plansError: null,
+    subscriptionStats: null,
+    subscriptionStatsLoading: false,
+    subscriptionStatsError: null,
 };
 
 export const fetchAllUsers = createAsyncThunk(
@@ -380,6 +421,30 @@ export const deletePlanByAdmin = createAsyncThunk(
     }
 );
 
+export const fetchSubscriptionStats = createAsyncThunk(
+    "admin/fetchSubscriptionStats",
+    async (period: string = "month", { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as {
+                auth: { user?: { access?: string } };
+            };
+            const token = state.auth.user?.access;
+
+            const response = await axios.get(
+                `${MAIN_URL}/subscriptions/stats/?period=${period}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data || "Failed to fetch subscription stats."
+            );
+        }
+    }
+);
+
 const adminSlice = createSlice({
     name: "admin",
     initialState,
@@ -389,6 +454,7 @@ const adminSlice = createSlice({
             state.catalogError = null;
             state.actionError = null;
             state.plansError = null;
+            state.subscriptionStats = null;
         },
     },
     extraReducers: (builder) => {
@@ -536,6 +602,20 @@ const adminSlice = createSlice({
             .addCase(deletePlanByAdmin.rejected, (state, action) => {
                 state.plansLoading = false;
                 state.plansError = action.payload as string;
+            })
+
+            // Subscription actions
+            .addCase(fetchSubscriptionStats.pending, (state) => {
+                state.subscriptionStatsLoading = true;
+                state.subscriptionStatsError = null;
+            })
+            .addCase(fetchSubscriptionStats.fulfilled, (state, action) => {
+                state.subscriptionStatsLoading = false;
+                state.subscriptionStats = action.payload;
+            })
+            .addCase(fetchSubscriptionStats.rejected, (state, action) => {
+                state.subscriptionStatsLoading = false;
+                state.subscriptionStatsError = action.payload as string;
             });
     },
 });
