@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum, Count
-from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear, TruncHour
 from account.models import User
 from .models import SubscriptionPlan, UserSubscription
 from .serializers import SubscriptionPlanSerializer, UserSubscriptionSerializer, ActivateSubscriptionSerializer, SubscriptionStatsSerializer
@@ -163,18 +163,28 @@ class SubscriptionStatsView(APIView):
             is_active=True, end_date__gt=timezone.now()).count()
 
         # Choose how to group dates depending on the selected period
-        if period == 'day':
+        if period == 'day1':
+            trunc_func = TruncHour
+            date_from = timezone.now() - timedelta(hours=24)  # last day
+        elif period == 'day7':
+            trunc_func = TruncDay
+            date_from = timezone.now() - timedelta(days=7)  # last week
+        elif period == 'day30':
             trunc_func = TruncDay
             date_from = timezone.now() - timedelta(days=30)  # last 30 days
-        elif period == 'week':
-            trunc_func = TruncWeek
-            date_from = timezone.now() - timedelta(weeks=12)  # last 12 weeks
+        elif period == 'month6':
+            trunc_func = TruncMonth
+            date_from = timezone.now() - timedelta(days=180)  # Last 6 moths
         elif period == 'year':
-            trunc_func = TruncYear
+            trunc_func = TruncMonth
             date_from = timezone.now() - timedelta(days=365)  # last 365 days
+        elif period == 'all':
+            trunc_func = TruncYear
+            date_from = None
         else:
             trunc_func = TruncMonth
-            date_from = timezone.now() - timedelta(days=365)
+            date_from = timezone.now() - timedelta(days=365) # last 12 months,fallback
+
 
         revenue_by_period = (
             all_subscriptions
