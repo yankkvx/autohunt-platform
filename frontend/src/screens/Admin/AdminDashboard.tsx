@@ -17,6 +17,7 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import CategoryIcon from "@mui/icons-material/Category";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import EqualizerIcon from "@mui/icons-material/Equalizer";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -27,6 +28,8 @@ interface DashboardStats {
     totalBrands: number;
     totalModels: number;
     totalPlans: number;
+    totalRevenue: number;
+    totalSubscriptions: number;
 }
 
 const AdminDashboard = () => {
@@ -39,24 +42,37 @@ const AdminDashboard = () => {
         totalBrands: 0,
         totalModels: 0,
         totalPlans: 0,
+        totalRevenue: 0,
+        totalSubscriptions: 0,
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const [usersRes, adsRes, brandsRes, modelsRes, plansRes] =
-                    await Promise.all([
-                        axios.get(`${MAIN_URL}/admin/users`, {
-                            headers: {
-                                Authorization: `Bearer ${user?.access}`,
-                            },
-                        }),
-                        axios.get(`${MAIN_URL}/ads/`),
-                        axios.get(`${MAIN_URL}/catalog/brands/`),
-                        axios.get(`${MAIN_URL}/catalog/models/`),
-                        axios.get(`${MAIN_URL}/subscriptions/plans/`),
-                    ]);
+                const [
+                    usersRes,
+                    adsRes,
+                    brandsRes,
+                    modelsRes,
+                    plansRes,
+                    statsRes,
+                ] = await Promise.all([
+                    axios.get(`${MAIN_URL}/admin/users`, {
+                        headers: {
+                            Authorization: `Bearer ${user?.access}`,
+                        },
+                    }),
+                    axios.get(`${MAIN_URL}/ads/`),
+                    axios.get(`${MAIN_URL}/catalog/brands/`),
+                    axios.get(`${MAIN_URL}/catalog/models/`),
+                    axios.get(`${MAIN_URL}/subscriptions/plans/`),
+                    axios.get(`${MAIN_URL}/subscriptions/stats/`, {
+                        headers: {
+                            Authorization: `Bearer ${user?.access}`,
+                        },
+                    }),
+                ]);
 
                 const users = usersRes.data;
                 setStats({
@@ -73,6 +89,9 @@ const AdminDashboard = () => {
                         modelsRes.data.length ||
                         0,
                     totalPlans: plansRes.data.length || 0,
+                    totalRevenue: statsRes.data.summary.total_revenue || 0,
+                    totalSubscriptions:
+                        statsRes.data.summary.total_subscriptions || 0,
                 });
             } catch (error) {
                 return "Failed to fetch stats.";
@@ -84,6 +103,14 @@ const AdminDashboard = () => {
             fetchStats();
         }
     }, [user]);
+
+    const isRevenueTooBig = stats.totalRevenue > 1000000;
+    const displayValue = isRevenueTooBig
+        ? stats.totalUsers
+        : `$${stats.totalRevenue}`;
+    const dispalayLabel = isRevenueTooBig
+        ? "Total Subscriptions"
+        : "Total Revenue";
 
     if (loading) {
         return (
@@ -233,6 +260,31 @@ const AdminDashboard = () => {
                         <Typography variant="h6">Total Plans</Typography>
                     </Paper>
                 </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            display: "flex",
+                            flexDirection: "column",
+                            height: 140,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                mb: 1,
+                            }}
+                        >
+                            <EqualizerIcon sx={{ fontSize: 40, mr: 1 }} />
+                            <Typography variant="h4" fontWeight="bold">
+                                {displayValue}
+                            </Typography>
+                        </Box>
+                        <Typography variant="h6">{dispalayLabel}</Typography>
+                    </Paper>
+                </Grid>
             </Grid>
 
             <Typography variant="h5" gutterBottom fontWeight={900}>
@@ -341,6 +393,35 @@ const AdminDashboard = () => {
                                         </Typography>
                                         <Typography variant="body2">
                                             Subscription plans
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Card>
+                        <CardActionArea
+                            onClick={() => navigate("/admin/stats")}
+                        >
+                            <CardContent>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <EqualizerIcon
+                                        sx={{ fontSize: 40, mr: 2 }}
+                                    />
+                                    <Box>
+                                        <Typography variant="h5">
+                                            Analytics
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Revenue & Activity
                                         </Typography>
                                     </Box>
                                 </Box>

@@ -17,6 +17,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import CategoryIcon from "@mui/icons-material/Category";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import EqualizerIcon from "@mui/icons-material/Equalizer";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -33,6 +34,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         { label: "Ads", path: "/admin/ads", icon: <DirectionsCarIcon /> },
         { label: "Catalog", path: "/admin/catalog", icon: <CategoryIcon /> },
         { label: "Plans", path: "/admin/plans", icon: <ReceiptIcon /> },
+        {
+            label: "Analytics",
+            path: "/admin/stats",
+            icon: <EqualizerIcon />,
+        },
     ];
 
     const currentTab = tabs.findIndex((tab) => tab.path === location.pathname);

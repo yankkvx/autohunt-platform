@@ -19,6 +19,7 @@ import FavouritesScreen from "./screens/FavouritesScreen";
 import ChatScreen from "./screens/ChatScreen";
 import SubscruptionPlansScreen from "./screens/SubscriptionPlansScreen";
 import AdminPlans from "./screens/Admin/AdminPlans";
+import AdminSubscriptionStats from "./screens/Admin/AdminSubscriptionStats";
 
 function App() {
     return (
@@ -88,10 +89,18 @@ function App() {
                             }
                         />
                         <Route
-                            path="admin/plans"
+                            path="/admin/plans"
                             element={
                                 <AdminRoute>
                                     <AdminPlans />
+                                </AdminRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/stats"
+                            element={
+                                <AdminRoute>
+                                    <AdminSubscriptionStats />
                                 </AdminRoute>
                             }
                         />
