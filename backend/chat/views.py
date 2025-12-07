@@ -17,7 +17,7 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Chat.objects.filter(Q(buyer=user) | Q(seller=user)).select_related('ad', 'buyer', 'seller').prefetch_related('messages')
+        return Chat.objects.filter(Q(buyer=user) | Q(seller=user)).select_related('ad', 'buyer', 'seller', 'ad__user', 'ad__brand', 'ad__model').prefetch_related('messages', 'ad__images')
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -55,6 +55,8 @@ class ChatViewSet(viewsets.ModelViewSet):
 
         Message.objects.filter(chat=instance, is_read=False).exclude(
             sender=request.user).update(is_read=True)
+        instance = Chat.objects.select_related('ad', 'buyer', 'seller', 'ad__user', 'ad__brand', 'ad__model').prefetch_related(
+            'messages__sender', 'ad__images').get(pk=instance.pk)
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
