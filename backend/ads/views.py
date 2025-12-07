@@ -44,10 +44,10 @@ def reverse_geocode(request):
 
         if result:
             return Response(result)
-        return Response({'detail': 'Location not fount.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Location not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     except (ValueError, TypeError):
-        return Response({'detail': 'Invalid parametes'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'Invalid parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AdViewSet(viewsets.ModelViewSet):
@@ -57,7 +57,8 @@ class AdViewSet(viewsets.ModelViewSet):
     Includes some custom actions for recent ads, image upload, etc
     """
     # Base queryset for all actions
-    queryset = Ad.objects.all()
+    queryset = Ad.objects.select_related('user', 'brand', 'model', 'body_type', 'fuel_type', 'drive_type',
+                                         'transmission', 'exterior_color', 'interior_color', 'interior_material').prefetch_related('images')
     pagination_class = AdPagination
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -131,7 +132,8 @@ class AdViewSet(viewsets.ModelViewSet):
     # Custom action, that return 10 most recent ads
     @action(detail=False, methods=['get'])
     def recent_ads(self, request):
-        queryset = self.get_queryset().order_by('-created_at')[:10]
+        queryset = Ad.objects.select_related(
+            'user', 'brand', 'model', 'body_type', 'fuel_type', 'transmission', 'exterior_color').prefetch_related('images').order_by('-created_at')[:10]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
