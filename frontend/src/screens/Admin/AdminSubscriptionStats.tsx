@@ -168,7 +168,7 @@ const AdminSubscriptionStats = () => {
                             >
                                 Active Subscriptions
                             </Typography>
-                            <Typography variant="h6" fontWeight={900}>
+                            <Typography variant="h4" fontWeight={900}>
                                 {stats?.summary.active_subscriptions}
                             </Typography>
                         </CardContent>
