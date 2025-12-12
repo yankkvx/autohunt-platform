@@ -8,7 +8,7 @@ from catalog.models import Brand, ModelCar, BodyType, FuelType, DriveType, Trans
 
 class Ad(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE, related_name='ads')
+                             on_delete=models.CASCADE, related_name='ads', db_index=True)
 
     title = models.CharField(max_length=200, blank=False)
     description = models.TextField(max_length=500, blank=True, null=True)
@@ -47,9 +47,9 @@ class Ad(models.Model):
         max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     vin = models.CharField(max_length=20, null=True, blank=True)
     location = models.CharField(max_length=150, null=True, blank=True)
-    warranty = models.BooleanField(default=False)
-    airbag = models.BooleanField(default=False)
-    air_conditioning = models.BooleanField(default=False)
+    warranty = models.BooleanField(default=False, db_index=True)
+    airbag = models.BooleanField(default=False, db_index=True)
+    air_conditioning = models.BooleanField(default=False, db_index=True)
     number_of_seats = models.PositiveIntegerField(
         null=True, blank=True, validators=[MinValueValidator(1)])
     number_of_doors = models.PositiveIntegerField(
@@ -63,9 +63,10 @@ class Ad(models.Model):
             ('restored', 'Restored'),
             ('drowned', 'Drowned'),
         ],
-        default='used')
+        default='used',
+        db_index=True)
     owner_count = models.PositiveIntegerField(null=True, blank=True)
-    is_first_owner = models.BooleanField(default=False)
+    is_first_owner = models.BooleanField(default=False, db_index=True)
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -140,11 +141,29 @@ class Ad(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['brand', 'model']),
+            models.Index(fields=['brand', 'year']),
+            models.Index(fields=['condition', 'year']),
+
+            models.Index(fields=['year', 'price']),
+            models.Index(fields=['price', 'mileage']),
+
+            models.Index(fields=['brand', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['condition', '-price']),
+
+            models.Index(fields=['-price']),
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['-mileage']),
+
+            models.Index(fields=['user', 'created_at']),
+        ]
 
 
 class AdImage(models.Model):
     ad = models.ForeignKey(Ad, on_delete=models.CASCADE,
-                           null=True, related_name='images')
+                           null=True, related_name='images', db_index=True)
     image = models.ImageField(null=True, blank=True, upload_to='images/ads')
 
     def __str__(self):
@@ -152,14 +171,17 @@ class AdImage(models.Model):
 
 
 class Favourite(models.Model):
-    ad = models.ForeignKey(Ad, on_delete=models.CASCADE,)
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE, db_index=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+                             on_delete=models.CASCADE, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('ad', 'user')
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
 
     def __str__(self):
         return f'{self.user.email} - {self.ad.id}'

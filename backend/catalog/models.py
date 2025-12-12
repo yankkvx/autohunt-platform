@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Brand(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True, db_index=True)
 
     def __str__(self):
         return self.name
@@ -10,7 +10,7 @@ class Brand(models.Model):
 
 class ModelCar(models.Model):
     brand = models.ForeignKey(
-        Brand, on_delete=models.CASCADE, related_name='models')
+        Brand, on_delete=models.CASCADE, related_name='models', db_index=True)
     name = models.CharField(max_length=150)
 
     class Meta:

@@ -13,7 +13,7 @@ class SubscriptionPlan(models.Model):
         validators=[MinValueValidator(0)])
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration_days = models.PositiveIntegerField(default=30)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -26,14 +26,14 @@ class SubscriptionPlan(models.Model):
 
 class UserSubscription(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscriptions')
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscriptions', db_index=True)
     plan = models.ForeignKey(
-        SubscriptionPlan, on_delete=models.SET_NULL, null=True, related_name='subscriptions')
+        SubscriptionPlan, on_delete=models.SET_NULL, null=True, related_name='subscriptions', db_index=True)
     plan_name = models.CharField(max_length=100)
     additional_ads = models.PositiveIntegerField()
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     paypal_order_id = models.CharField(max_length=255, blank=True, null=True)
     paypal_payer_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -42,6 +42,11 @@ class UserSubscription(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['plan_name', 'created_at']),
+            models.Index(fields=['created_at'])
+        ]
 
     def __str__(self):
         return f'{self.user.email} - {self.plan_name} ({"Active" if self.is_active else "Expired"})'
