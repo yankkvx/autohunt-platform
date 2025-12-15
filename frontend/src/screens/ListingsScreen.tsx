@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import ListingFilters from "../components/ListingsScreen/ListingFilters";
 import AdCard from "../components/ListingsScreen/AdCard";
+import ActiveFiltersBar from "../components/ListingsScreen/ActiveFiltersBar";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchAds } from "../store/slices/adsSlice";
 import { fetchFavourites } from "../store/slices/favouriteSlice";
@@ -469,6 +470,32 @@ const ListingsScreen = () => {
 
     const [drawerOpen, setDrawerOpen] = useState(false);
 
+    const handleRemoveFilter = (filterKey: string) => {
+        setFilters((prev: any) => {
+            const next = { ...prev };
+
+            if (filterKey.endsWith("From") || filterKey.endsWith("To")) {
+                delete next[filterKey];
+                return { ...next };
+            }
+
+            if (Array.isArray(next[filterKey])) {
+                delete next[filterKey];
+                return { ...next };
+            }
+
+            delete next[filterKey];
+            return { ...next };
+        });
+
+        setPage(1);
+    };
+
+    const handleClearAllFilters = () => {
+        setFilters({});
+        setPage(1);
+    };
+
     return (
         <MainLayout>
             <Container maxWidth="xl" sx={{ pt: 2, pb: 4 }}>
@@ -480,6 +507,7 @@ const ListingsScreen = () => {
                         }}
                     >
                         <ListingFilters
+                            key={JSON.stringify(filters)}
                             filters={filters}
                             onChange={handleFiltersChange}
                         />
@@ -575,6 +603,12 @@ const ListingsScreen = () => {
                     />
                 </Box>
             </Container>
+            <ActiveFiltersBar
+                filters={filters}
+                catalogState={catalogState}
+                onRemoveFilter={handleRemoveFilter}
+                onClearAll={handleClearAllFilters}
+            />
         </MainLayout>
     );
 };
