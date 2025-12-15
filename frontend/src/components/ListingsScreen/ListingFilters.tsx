@@ -472,7 +472,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                 options={interiorMaterialsOptions}
                                 value={filters.interiorMaterial?.map(
                                     (im: string) =>
-                                        interiorMaterials.find(
+                                        interiorMaterialsOptions.find(
                                             (opt: any) => opt.value === im
                                         )
                                 )}
