@@ -83,7 +83,18 @@ export const CONDITION_OPTIONS = [
 
 export const fetchCatalog = createAsyncThunk(
     "catalog/fetchCatalog",
-    async () => {
+    async (_, { getState }) => {
+        const state = getState() as { catalog: CatalogState };
+        if (state.catalog.brands.length > 0) {
+            return {
+                brands: state.catalog.brands,
+                models: state.catalog.models,
+                bodyTypes: state.catalog.bodyTypes,
+                fuelTypes: state.catalog.fuelTypes,
+                driveTypes: state.catalog.driveTypes,
+                transmissions: state.catalog.transmissions,
+            };
+        }
         const [
             brands,
             models,
@@ -112,7 +123,15 @@ export const fetchCatalog = createAsyncThunk(
 
 export const fetchExtendedFilters = createAsyncThunk(
     "catalog/fetchExtendedFilters",
-    async () => {
+    async (_, { getState }) => {
+        const state = getState() as { catalog: CatalogState };
+        if (state.catalog.colors.length > 0) {
+            return {
+                colors: state.catalog.colors,
+                interiorMaterials: state.catalog.interiorMaterials,
+                conditions: CONDITION_OPTIONS,
+            };
+        }
         const [colors, interiorMaterials] = await Promise.all([
             axios.get(`${MAIN_URL}/catalog/colors/`),
             axios.get(`${MAIN_URL}/catalog/interior-materials/`),

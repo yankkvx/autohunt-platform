@@ -67,7 +67,7 @@ const ActiveFiltersBar = ({
 
             case "batteryPowerFrom":
                 return `Battery power from ${value.value} kW`;
-            case "batteryPowerto":
+            case "batteryPowerTo":
                 return `Battery power to ${value.value} kW`;
 
             case "batteryCapacityFrom":

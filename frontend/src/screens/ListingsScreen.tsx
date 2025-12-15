@@ -23,7 +23,6 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchAds } from "../store/slices/adsSlice";
 import { fetchFavourites } from "../store/slices/favouriteSlice";
 import CloseIcon from "@mui/icons-material/Close";
-import { useRef } from "react";
 
 type FilterType = "single" | "range" | "multiSelect" | "boolean" | "search";
 
@@ -403,7 +402,6 @@ const ListingsScreen = () => {
     const [page, setPage] = useState(1);
 
     const [filters, setFilters] = useState({});
-    const hasFetched = useRef(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
     const pageSize = 16;
@@ -448,13 +446,7 @@ const ListingsScreen = () => {
     // Fetch ads when filters or page changes
     useEffect(() => {
         if (catalogState.brands.length === 0 || !isInitialized) return;
-
-        hasFetched.current = false;
-
-        if (!hasFetched.current) {
-            hasFetched.current = true;
-            dispatch(fetchAds({ page, filters }));
-        }
+        dispatch(fetchAds({ page, filters }));
     }, [dispatch, page, filters, catalogState.brands.length, isInitialized]);
 
     useEffect(() => {
@@ -476,12 +468,24 @@ const ListingsScreen = () => {
 
             if (filterKey.endsWith("From") || filterKey.endsWith("To")) {
                 delete next[filterKey];
-                return { ...next };
+                return next;
             }
 
             if (Array.isArray(next[filterKey])) {
                 delete next[filterKey];
-                return { ...next };
+                return next;
+            }
+
+            if (
+                next[filterKey] &&
+                typeof next[filterKey] === "object" &&
+                "value" in next[filterKey]
+            ) {
+                delete next[filterKey];
+
+                if (filterKey === "brand") {
+                    delete next.model;
+                }
             }
 
             delete next[filterKey];
@@ -507,7 +511,6 @@ const ListingsScreen = () => {
                         }}
                     >
                         <ListingFilters
-                            key={JSON.stringify(filters)}
                             filters={filters}
                             onChange={handleFiltersChange}
                         />

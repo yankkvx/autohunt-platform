@@ -9,7 +9,7 @@ import {
     Paper,
     CircularProgress,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
     fetchCatalog,
@@ -95,9 +95,13 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
     } = useAppSelector((state) => state.catalog);
 
     useEffect(() => {
-        dispatch(fetchCatalog());
-        dispatch(fetchExtendedFilters());
-    }, [dispatch]);
+        if (brands.length === 0) {
+            dispatch(fetchCatalog());
+        }
+        if (colors.length === 0 || interiorMaterials.length === 0) {
+            dispatch(fetchExtendedFilters());
+        }
+    }, []);
 
     const selectStyles = useListingSelectStyle();
     const [showMore, setShowMore] = useState(false);
@@ -120,51 +124,59 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
         });
     };
 
-    const brandOptions = brands.map((b: any) => ({
-        value: b.id,
-        label: b.name,
-    }));
-    const modelOptions = models
-        .filter((m: any) =>
-            m.brand ? m.brand.id === filters.brand?.value : true
-        )
-        .map((m: any) => ({ value: m.id, label: m.name }));
-    const bodyTypeOptions = bodyTypes.map((bt: any) => ({
-        value: bt.id,
-        label: bt.name,
-    }));
-    const fuelTypeOptions = fuelTypes.map((ft: any) => ({
-        value: ft.id,
-        label: ft.name,
-    }));
-    const transmissionOptions = transmissions.map((t: any) => ({
-        value: t.id,
-        label: t.name,
-    }));
-    const driveTypeOptions = driveTypes.map((dt: any) => ({
-        value: dt.id,
-        label: dt.name,
-    }));
+    const brandOptions = useMemo(
+        () => brands.map((b: any) => ({ value: b.id, label: b.name })),
+        [brands]
+    );
+    const modelOptions = useMemo(
+        () =>
+            models
+                .filter((m: any) =>
+                    m.brand ? m.brand.id === filters.brand?.value : true
+                )
+                .map((m: any) => ({ value: m.id, label: m.name })),
+        [models, filters.brand]
+    );
+    const bodyTypeOptions = useMemo(
+        () => bodyTypes.map((bt: any) => ({ value: bt.id, label: bt.name })),
+        [bodyTypes]
+    );
+    const fuelTypeOptions = useMemo(
+        () => fuelTypes.map((ft: any) => ({ value: ft.id, label: ft.name })),
+        [fuelTypes]
+    );
+    const transmissionOptions = useMemo(
+        () => transmissions.map((t: any) => ({ value: t.id, label: t.name })),
+        [transmissions]
+    );
+    const driveTypeOptions = useMemo(
+        () => driveTypes.map((dt: any) => ({ value: dt.id, label: dt.name })),
+        [driveTypes]
+    );
 
-    const exteriorColorsOptions = colors.map((ec: any) => ({
-        value: ec.id,
-        label: ec.name,
-    }));
+    const exteriorColorsOptions = useMemo(
+        () => colors.map((ec: any) => ({ value: ec.id, label: ec.name })),
+        [colors]
+    );
 
-    const interiorColorsOptions = colors.map((ic: any) => ({
-        value: ic.id,
-        label: ic.name,
-    }));
+    const interiorColorsOptions = useMemo(
+        () => colors.map((ic: any) => ({ value: ic.id, label: ic.name })),
+        [colors]
+    );
 
-    const interiorMaterialsOptions = interiorMaterials.map((im: any) => ({
-        value: im.id,
-        label: im.name,
-    }));
+    const interiorMaterialsOptions = useMemo(
+        () =>
+            interiorMaterials.map((im: any) => ({
+                value: im.id,
+                label: im.name,
+            })),
+        [interiorMaterials]
+    );
 
-    const conditionOptions = conditions.map((c: any) => ({
-        value: c.value,
-        label: c.label,
-    }));
+    const conditionOptions = useMemo(
+        () => conditions.map((c: any) => ({ value: c.value, label: c.label })),
+        [conditions]
+    );
 
     if (loading)
         return (
@@ -192,6 +204,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                 <Box display="flex" flexDirection="column" gap={2}>
                     {/* Brand */}
                     <Select
+                        key={`brand-${filters.brand?.value || "empty"}`}
                         options={brandOptions}
                         value={filters.brand}
                         onChange={(value) => handleChange("brand", value)}
@@ -201,6 +214,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Model */}
                     <Select
+                        key={`model-${filters.model?.value || "empty"}`}
                         options={modelOptions}
                         value={filters.model}
                         onChange={(value) => handleChange("model", value)}
@@ -211,6 +225,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Year from */}
                     <CreatableSelect
+                        key={`yearFrom-${filters.yearFrom?.value || "empty"}`}
                         options={years}
                         value={filters.yearFrom}
                         onChange={(value) => handleChange("yearFrom", value)}
@@ -221,6 +236,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Year to */}
                     <CreatableSelect
+                        key={`yearTo-${filters.yearTo?.value || "empty"}`}
                         options={years}
                         value={filters.yearTo}
                         onChange={(value) => handleChange("yearTo", value)}
@@ -231,6 +247,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Mileage from */}
                     <CreatableSelect
+                        key={`mileageFrom-${
+                            filters.mileageFrom?.value || "empty"
+                        }`}
                         options={mileages}
                         value={filters.mileageFrom}
                         onChange={(value) => handleChange("mileageFrom", value)}
@@ -241,6 +260,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Mileage to */}
                     <CreatableSelect
+                        key={`mileageTo-${filters.mileageTo?.value || "empty"}`}
                         options={mileages}
                         value={filters.mileageTo}
                         onChange={(value) => handleChange("mileageTo", value)}
@@ -251,6 +271,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Transmission */}
                     <Select
+                        key={`transmission-${
+                            filters.transmission?.value || "empty"
+                        }`}
                         options={transmissionOptions}
                         value={filters.transmission?.map((t: string) =>
                             transmissionOptions.find(
@@ -267,6 +290,7 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                     {/* Fuel type */}
                     <Select
+                        key={`fuelType-${filters.fuelType?.value || "empty"}`}
                         options={fuelTypeOptions}
                         value={filters.fuelType}
                         onChange={(value) => handleChange("fuelType", value)}
@@ -281,6 +305,10 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                 <>
                                     {/* Battery power */}
                                     <CreatableSelect
+                                        key={`batteryPowerFrom-${
+                                            filters.batteryPowerFrom?.value ||
+                                            "empty"
+                                        }`}
                                         options={batteryPowers}
                                         value={filters.batteryPowerFrom}
                                         onChange={(value) =>
@@ -294,6 +322,10 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                         styles={selectStyles}
                                     />
                                     <CreatableSelect
+                                        key={`batteryPowerTo-${
+                                            filters.batteryPowerTo?.value ||
+                                            "empty"
+                                        }`}
                                         options={batteryPowers}
                                         value={filters.batteryPowerTo}
                                         onChange={(value) =>
@@ -308,6 +340,10 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                     />
                                     {/* Battery capacity */}
                                     <CreatableSelect
+                                        key={`batteryCapacityFrom-${
+                                            filters.batteryCapacityFrom
+                                                ?.value || "empty"
+                                        }`}
                                         options={batteryCapacities}
                                         value={filters.batteryCapacityFrom}
                                         onChange={(value) =>
@@ -321,6 +357,10 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                         styles={selectStyles}
                                     />
                                     <CreatableSelect
+                                        key={`batteryCapacityTo-${
+                                            filters.batteryCapacityTo?.value ||
+                                            "empty"
+                                        }`}
                                         options={batteryCapacities}
                                         value={filters.batteryCapacityTo}
                                         onChange={(value) =>
@@ -338,6 +378,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                 <>
                                     {/* Power */}
                                     <CreatableSelect
+                                        key={`powerFrom-${
+                                            filters.powerFrom?.value || "empty"
+                                        }`}
                                         options={powers}
                                         value={filters.powerFrom}
                                         onChange={(value) =>
@@ -348,6 +391,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                         styles={selectStyles}
                                     />
                                     <CreatableSelect
+                                        key={`powerTo-${
+                                            filters.powerTo?.value || "empty"
+                                        }`}
                                         options={powers}
                                         value={filters.powerTo}
                                         onChange={(value) =>
@@ -359,6 +405,10 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                     />
                                     {/* Capacity */}
                                     <CreatableSelect
+                                        key={`capacityFrom-${
+                                            filters.capacityFrom?.value ||
+                                            "empty"
+                                        }`}
                                         options={capacities}
                                         value={filters.capacityFrom}
                                         onChange={(value) =>
@@ -369,6 +419,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                         styles={selectStyles}
                                     />
                                     <CreatableSelect
+                                        key={`capacityTo-${
+                                            filters.capacityTo?.value || "empty"
+                                        }`}
                                         options={capacities}
                                         value={filters.capacityTo}
                                         onChange={(value) =>
@@ -383,6 +436,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Price */}
                             <CreatableSelect
+                                key={`priceFrom-${
+                                    filters.priceFrom?.value || "empty"
+                                }`}
                                 options={prices}
                                 value={filters.priceFrom}
                                 onChange={(value) =>
@@ -393,6 +449,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                                 styles={selectStyles}
                             />
                             <CreatableSelect
+                                key={`priceTo-${
+                                    filters.priceTo?.value || "empty"
+                                }`}
                                 options={prices}
                                 value={filters.priceTo}
                                 onChange={(value) =>
@@ -405,6 +464,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Body type */}
                             <Select
+                                key={`bodyType-${
+                                    filters.bodyType?.value || "empty"
+                                }`}
                                 options={bodyTypeOptions}
                                 value={filters.bodyType?.map((b: string) =>
                                     bodyTypeOptions.find(
@@ -421,6 +483,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Drive type */}
                             <Select
+                                key={`driveType-${
+                                    filters.driveType?.value || "empty"
+                                }`}
                                 options={driveTypeOptions}
                                 value={filters.driveType?.map((d: string) =>
                                     driveTypeOptions.find(
@@ -437,6 +502,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Exterior color */}
                             <Select
+                                key={`exteriorColor-${
+                                    filters.exteriorColor?.value || "empty"
+                                }`}
                                 options={exteriorColorsOptions}
                                 value={filters.exteriorColor?.map((e: string) =>
                                     exteriorColorsOptions.find(
@@ -453,6 +521,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Interior color */}
                             <Select
+                                key={`interiorColor-${
+                                    filters.interiorColor?.value || "empty"
+                                }`}
                                 options={interiorColorsOptions}
                                 value={filters.interiorColor?.map((i: string) =>
                                     interiorColorsOptions.find(
@@ -469,6 +540,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Interior materials */}
                             <Select
+                                key={`interiorMaterial-${
+                                    filters.interiorMaterial?.value || "empty"
+                                }`}
                                 options={interiorMaterialsOptions}
                                 value={filters.interiorMaterial?.map(
                                     (im: string) =>
@@ -486,8 +560,11 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Number of doors */}
                             <CreatableSelect
+                                key={`numberOfDoors-${
+                                    filters.numberOfDoors?.value || "empty"
+                                }`}
                                 options={numberOfDoors}
-                                value={filters.numberOfDoor}
+                                value={filters.numberOfDoors}
                                 onChange={(value) =>
                                     handleChange("numberOfDoors", value)
                                 }
@@ -498,6 +575,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
 
                             {/* Number of seats */}
                             <CreatableSelect
+                                key={`numberOfSeats-${
+                                    filters.numberOfSeats?.value || "empty"
+                                }`}
                                 options={numberOfSeats}
                                 value={filters.numberOfSeats}
                                 onChange={(value) =>
@@ -509,6 +589,9 @@ const ListingFilters = ({ filters, onChange }: ListingFiltersProps) => {
                             />
 
                             <Select
+                                key={`conditions-${
+                                    filters.conditions?.value || "empty"
+                                }`}
                                 options={conditionOptions}
                                 value={filters.conditions?.map((c: string) =>
                                     conditionOptions.find(
