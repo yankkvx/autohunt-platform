@@ -40,4 +40,4 @@ RUN mkdir -p /app/static/images
 EXPOSE 8000
 
 # Set the default command to run django server
-CMD ['python', 'manage.py', 'runserver', '0.0.0.0:8000']
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
