@@ -39,7 +39,7 @@ const LocationInput = ({
     const [isLoading, setIsLoading] = useState(false);
 
     const fetchLoadingInputs = async (
-        inputValue: string
+        inputValue: string,
     ): Promise<LocationOptions[]> => {
         if (!inputValue || inputValue.length < 3) return [];
 
@@ -47,8 +47,8 @@ const LocationInput = ({
         try {
             const result = await fetch(
                 `${MAIN_URL}/locations/search/?q=${encodeURIComponent(
-                    inputValue
-                )}`
+                    inputValue,
+                )}`,
             );
             if (!result.ok) return [];
 
@@ -67,7 +67,7 @@ const LocationInput = ({
     };
     const loadOptions = (
         inputValue: string,
-        callback: (options: LocationOptions[]) => void
+        callback: (options: LocationOptions[]) => void,
     ) => {
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
@@ -94,7 +94,7 @@ const LocationInput = ({
         formik.setFieldValue(fieldName, loc.display_name);
         formik.setFieldValue(
             "city",
-            loc.address.city || loc.address.town || loc.address.village || ""
+            loc.address.city || loc.address.town || loc.address.village || "",
         );
         formik.setFieldValue("state", loc.address.state || "");
         formik.setFieldValue("country", loc.address.country || "");
@@ -116,16 +116,20 @@ const LocationInput = ({
     const enhancedStyles = {
         ...selectStyles,
         control: (base: any, state: any) => ({
-            ...selectStyles.control(base, state),
+            ...(selectStyles.control
+                ? selectStyles.control(base, state)
+                : base),
             minHeight: 56,
             width: "100%",
         }),
         option: (base: any, state: any) => ({
-            ...selectStyles.option(base, state),
+            ...(selectStyles.option ? selectStyles.option(base, state) : base),
             fontWeight: "normal",
         }),
         singleValue: (base: any, state: any) => ({
-            ...selectStyles.singleValue(base, state),
+            ...(selectStyles.singleValue
+                ? selectStyles.singleValue(base, state)
+                : base),
             fontWeight: "normal",
         }),
     };
