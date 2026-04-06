@@ -44,7 +44,7 @@ const AdminUsers = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { users, usersLoading, actionLoading, actionError } = useAppSelector(
-        (state) => state.admin
+        (state) => state.admin,
     );
     const currentUser = useAppSelector((state) => state.auth.user);
 
@@ -66,7 +66,7 @@ const AdminUsers = () => {
                 search: searchTerm,
                 account_type: accountTypeFilter,
                 is_active: activeFilter ? activeFilter : undefined,
-            })
+            }),
         );
     };
 
@@ -164,7 +164,7 @@ const AdminUsers = () => {
                     >
                         <MenuItem value="">All</MenuItem>
                         <MenuItem value="private">Private</MenuItem>
-                        <MenuItem value="company">Comapny</MenuItem>
+                        <MenuItem value="company">Company</MenuItem>
                     </TextField>
                     <TextField
                         select
@@ -269,10 +269,12 @@ const AdminUsers = () => {
                                     />
                                 </TableCell>
                                 <TableCell align="right">
-                                    <Tooltip title="View Ad">
+                                    <Tooltip title="View profile">
                                         <IconButton
                                             size="small"
-                                            onClick={() => handleShowProfile(user.id)}
+                                            onClick={() =>
+                                                handleShowProfile(user.id)
+                                            }
                                             color="primary"
                                         >
                                             <VisibilityIcon />
