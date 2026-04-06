@@ -108,7 +108,7 @@ const AdDetails = ({ ad }: AdDetailsProps) => {
                                 Mileage
                             </Typography>
                         </Box>
-                        <Typography ml={3.5}>{ad.mileage} km</Typography>
+                        <Typography ml={3.5}>{ad.mileage} mi</Typography>
                     </Grid>
                     <Grid size={{ xs: 6, md: 4 }}>
                         <Box display="flex" alignItems="center">
@@ -154,7 +154,11 @@ const AdDetails = ({ ad }: AdDetailsProps) => {
                     <Grid size={{ xs: 6, md: 4 }}>
                         <Box display="flex" alignItems="center">
                             <PersonIcon />
-                            <Typography variant="body2" ml={0.5}>
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                ml={0.5}
+                            >
                                 Seller
                             </Typography>
                         </Box>
