@@ -22,7 +22,7 @@ import { fetchLatestCars } from "../../store/slices/latestCarSlice";
 const LatestAdsSection = () => {
     const dispatch = useAppDispatch();
     const { cars, loading, error } = useAppSelector(
-        (state) => state.latestCars
+        (state) => state.latestCars,
     );
 
     useEffect(() => {
@@ -150,7 +150,7 @@ const LatestAdsSection = () => {
                                 >
                                     $
                                     {new Intl.NumberFormat("de-DE").format(
-                                        Number(car.price)
+                                        Number(car.price),
                                     )}
                                 </Typography>
                                 <Box
@@ -172,7 +172,14 @@ const LatestAdsSection = () => {
                                     )}
                                     {car.condition && (
                                         <Chip
-                                            label={car.condition}
+                                            label={
+                                                car.condition
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                car.condition
+                                                    .slice(1)
+                                                    .toLocaleLowerCase()
+                                            }
                                             sx={{
                                                 fontSize: "0.9rem",
                                                 borderRadius: 3,
